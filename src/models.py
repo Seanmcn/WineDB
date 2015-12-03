@@ -17,7 +17,7 @@ class Wines(models.Model):
     eyes = models.TextField()
     nose = models.TextField()
     mouth = models.TextField()
-    all_in_all = models.TextField()
+    overall = models.TextField()
     producer = models.TextField()
 
     region = models.CharField(max_length=150)

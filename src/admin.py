@@ -9,9 +9,9 @@ class HistoryAdmin(admin.ModelAdmin):
 
 
 class WinesAdmin(admin.ModelAdmin):
-    list_display = ('name', 'color', 'grape', 'rating', 'date')
-    list_filter = ['color', 'grape', 'rating']
-    search_fields = ['name', 'color', 'grape']
+    list_display = ('name', 'region', 'sub_region', 'vintage', 'price')
+    list_filter = ['region', 'sub_region',  'vintage']
+    search_fields = ['name', 'price', 'vintage', 'region', 'sub_region']
 
 admin.site.register(Wines, WinesAdmin)
 admin.site.register(History, HistoryAdmin)
