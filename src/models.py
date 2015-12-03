@@ -13,14 +13,24 @@ class History(models.Model):
 class Wines(models.Model):
     name = models.CharField(max_length=300)
     color = models.CharField(max_length=50)
-    grape = models.CharField(max_length=150)
-    location = models.CharField(max_length=300)
+
+    eyes = models.TextField()
+    nose = models.TextField()
+    mouth = models.TextField()
+    all_in_all = models.TextField()
+    producer = models.TextField()
+
+    region = models.CharField(max_length=150)
+    sub_region = models.CharField(max_length=150)
+    variety = models.CharField(max_length=150)
+    vintage = models.CharField(max_length=150)
+
     price = models.IntegerField()
-    rating = models.IntegerField()
     description = models.TextField()
-    mix = models.CharField(max_length=300)
-    date = models.DateTimeField('date published')
-    harvestedFrom = models.ForeignKey(History)
+
+    harvest_data = models.TextField()
+    harvested_from = models.ForeignKey(History)
+    harvested_date = models.DateTimeField('date harvested')
 
     def __str__(self):
         return self.name
