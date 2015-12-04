@@ -39,8 +39,10 @@ class Command(BaseCommand):
         # single 2
         # req = requests.get('http://www.joshlikeswine.com/2014/01/13/2012-artero-macabeo-verdejo/')
         # multi 1
-        req = requests.get(
-            'http://www.joshlikeswine.com/2015/11/08/canadian-wines-with-rhodanien-and-tuscan-influence/')
+        req = requests.get('http://www.joshlikeswine.com/2015/11/08/canadian-wines-with-rhodanien-and-tuscan-influence/')
+        # multi 2
+        # req = requests.get('http://www.joshlikeswine.com/2015/12/02/16-wines-to-pair-with-your-disappointing-new-years-resolutions-of-2016/')
+
         soup = BeautifulSoup(req.content, 'html.parser')
 
         ##########################################################
@@ -85,10 +87,11 @@ class Command(BaseCommand):
         else:
             # Multi wine post
             multi_wine_regex = re.compile(
-                r"""<p><strong>(.*?)<\/strong>(.*?)<br>(.*?)<\/p>|<p><strong>(.*?)<\/strong>(.*?)<br\/>(.*?)<\/p>""",
-                re.M | re.S)
+                r"""<p><(.*?)<\/strong>(.*?)(<br>|<br\/>)(.*?)<\/p>""",
+                re.M | re.S | re.I)
             results = multi_wine_regex.findall(str(article))
 
+            # print(article)
             # Process multi-wine results
             if results:
                 for result in results:
