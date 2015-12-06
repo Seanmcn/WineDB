@@ -85,7 +85,7 @@ class Command(BaseCommand):
                     if ("Eyes" in key) or ("eyes" in key):
                         eyes = value
                     elif ("Nose" in key) or ("nose" in key):
-                        wine.nose = value
+                        nose = value
                     elif ("Mouth" in key) or ("mouth" in key):
                         mouth = value
                     elif ("All in all" in key) or ("all in all" in key):
