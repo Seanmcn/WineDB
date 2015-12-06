@@ -37,9 +37,9 @@ class Command(BaseCommand):
         # single
         # req = requests.get('http://www.joshlikeswine.com/2012/05/07/2010-tranchero-moscato-dasti/')
         # single 2
-        # req = requests.get('http://www.joshlikeswine.com/2014/01/13/2012-artero-macabeo-verdejo/')
+        req = requests.get('http://www.joshlikeswine.com/2014/01/13/2012-artero-macabeo-verdejo/')
         # multi 1
-        req = requests.get('http://www.joshlikeswine.com/2015/11/08/canadian-wines-with-rhodanien-and-tuscan-influence/')
+        # req = requests.get('http://www.joshlikeswine.com/2015/11/08/canadian-wines-with-rhodanien-and-tuscan-influence/')
         # multi 2
         # req = requests.get('http://www.joshlikeswine.com/2015/12/02/16-wines-to-pair-with-your-disappointing-new-years-resolutions-of-2016/')
 
@@ -81,8 +81,19 @@ class Command(BaseCommand):
 
             # Process single-wine results
             if results:
-                for result in results:
-                    print(result)
+                for key, value in results:
+                    if ("Eyes" in key) or ("eyes" in key):
+                        eyes = value
+                    elif ("Nose" in key) or ("nose" in key):
+                        wine.nose = value
+                    elif ("Mouth" in key) or ("mouth" in key):
+                        mouth = value
+                    elif ("All in all" in key) or ("all in all" in key):
+                        overall = value
+                    elif ("Producer" in key) or ("producer" in key):
+                        producer = value
+                    elif ("Price" in key) or ("price" in key):
+                        price = value
 
         else:
             # Multi wine post
@@ -91,7 +102,6 @@ class Command(BaseCommand):
                 re.M | re.S | re.I)
             results = multi_wine_regex.findall(str(article))
 
-            # print(article)
             # Process multi-wine results
             if results:
                 for result in results:
