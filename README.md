@@ -1,2 +1,2 @@
 # WineDB
-Wine database via scraping http://joshlikeswine.com - Project for me to mess around with Django
+Project using Python & Django to scrape content from [Josh Likes Wine](http://joshlikeswine.com) to create a "choose a wine" database & wizard tool.
