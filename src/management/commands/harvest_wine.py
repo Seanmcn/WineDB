@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from django.utils.html import strip_tags
 import requests
 import re
+import datetime
 
 
 class Command(BaseCommand):
@@ -75,13 +76,26 @@ class Command(BaseCommand):
         is_tasting = tasting_search.findall(str(article))
 
         if is_tasting:
+            # print(article)
+            # exit()
             # Single wine post
-            single_wine_regex = re.compile(r"""<strong>(.*)<\/strong>(.*)<""", re.M)
+            single_wine_regex = re.compile(r"""<strong>(.*?)<\/strong>(.*?)(?=<)""", re.M | re.S)
             results = single_wine_regex.findall(str(article))
+
+            color, eyes, nose, mouth, overall, producer = ('N/A',) * 6
+            price = 0
+            region, sub_region, variety, vintage, description = ('',) * 5
+
+            h = History.objects.get(url='http://www.joshlikeswine.com/2014/01/13/2012-artero-macabeo-verdejo/')
 
             # Process single-wine results
             if results:
                 for key, value in results:
+                    value_soup = BeautifulSoup(value, 'html.parser')
+                    value = value_soup.getText()
+                    key_soup = BeautifulSoup(key, 'html.parser')
+                    key = key_soup.getText()
+
                     if ("Eyes" in key) or ("eyes" in key):
                         eyes = value
                     elif ("Nose" in key) or ("nose" in key):
@@ -93,7 +107,21 @@ class Command(BaseCommand):
                     elif ("Producer" in key) or ("producer" in key):
                         producer = value
                     elif ("Price" in key) or ("price" in key):
-                        price = value
+                        price = value.replace("$", "")
+                    elif ("Sub-Region" in key) or ("sub-region" in key):
+                        sub_region = value
+                    elif ("Region" in key) or ("region" in key):
+                        region = value
+                    elif ("Variety" in key) or ("variety" in key):
+                        variety = value
+                    elif ("Vintage" in key) or ("vintage" in key):
+                        vintage = value
+
+                w = Wines(name=title, color=color, eyes=eyes, nose=nose, mouth=mouth, overall=overall,
+                          producer=producer, price=price, region=region, sub_region=sub_region, variety=variety,
+                          vintage=vintage, description=description, harvest_data=str(article), harvested_from=h,
+                          harvested_date=datetime.datetime.now(datetime.timezone.utc))
+                w.save()
 
         else:
             # Multi wine post

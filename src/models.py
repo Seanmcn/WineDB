@@ -12,7 +12,7 @@ class History(models.Model):
 
 class Wines(models.Model):
     name = models.CharField(max_length=300)
-    color = models.CharField(max_length=50)
+    color = models.CharField(max_length=50, default='N/A')
 
     eyes = models.TextField()
     nose = models.TextField()
@@ -20,12 +20,12 @@ class Wines(models.Model):
     overall = models.TextField()
     producer = models.TextField()
 
-    region = models.CharField(max_length=150)
-    sub_region = models.CharField(max_length=150)
-    variety = models.CharField(max_length=150)
-    vintage = models.CharField(max_length=150)
+    region = models.CharField(max_length=150, default='N/A')
+    sub_region = models.CharField(max_length=150, default='N/A')
+    variety = models.CharField(max_length=150, default='N/A')
+    vintage = models.CharField(max_length=150, default='N/A')
 
-    price = models.IntegerField()
+    price = models.IntegerField(default=0)
     description = models.TextField()
 
     harvest_data = models.TextField()
