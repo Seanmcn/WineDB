@@ -27,7 +27,7 @@ class Wines(models.Model):
     vintage = models.CharField(max_length=150, default='N/A')
     tags = models.CharField(max_length=300, default='')
 
-    price = models.IntegerField(default=0)
+    price = models.CharField(max_length=150, default=0)
     description = models.TextField()
 
     harvest_data = models.TextField()
