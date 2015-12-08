@@ -38,7 +38,11 @@ class Command(BaseCommand):
         # single
         # req = requests.get('http://www.joshlikeswine.com/2012/05/07/2010-tranchero-moscato-dasti/')
         # single 2
-        req = requests.get('http://www.joshlikeswine.com/2014/01/13/2012-artero-macabeo-verdejo/')
+        # req = requests.get('http://www.joshlikeswine.com/2014/01/13/2012-artero-macabeo-verdejo/')
+        # single 3
+        req = requests.get(
+            'http://www.joshlikeswine.com/2014/12/22/cantina-valpantena-2012-torre-del-falasco-valpolicella-ripasso/')
+
         # multi 1
         # req = requests.get('http://www.joshlikeswine.com/2015/11/08/canadian-wines-with-rhodanien-and-tuscan-influence/')
         # multi 2
@@ -70,23 +74,30 @@ class Command(BaseCommand):
         # Try get the wine data #
         #########################
         article = soup.find('article')
+        tags = soup.find('div', class_="eltdf-tags").getText().replace('/', ', ')
 
         # Figure out if single or multi wine post by searching for tasting note
         tasting_search = re.compile(r"""(tasting note)""", re.I)
         is_tasting = tasting_search.findall(str(article))
 
         if is_tasting:
-            # print(article)
-            # exit()
             # Single wine post
+            single_wine_descrip = re.compile(r"""<p><strong>|<p.*?>(.*?)<\/p>""", re.M | re.S)
             single_wine_regex = re.compile(r"""<strong>(.*?)<\/strong>(.*?)(?=<)""", re.M | re.S)
             results = single_wine_regex.findall(str(article))
+            descrip_results = single_wine_descrip.findall(str(article))
 
             color, eyes, nose, mouth, overall, producer = ('N/A',) * 6
             price = 0
-            region, sub_region, variety, vintage, description = ('',) * 5
+            region, sub_region, variety, vintage, description, abv = ('',) * 6
 
             h = History.objects.get(url='http://www.joshlikeswine.com/2014/01/13/2012-artero-macabeo-verdejo/')
+
+            # Try figure out the colour
+            if ('white' in tags) or ('White' in tags):
+                color = 'White'
+            if ('red' in tags) or ('Red' in tags):
+                color = 'Red'
 
             # Process single-wine results
             if results:
@@ -116,10 +127,16 @@ class Command(BaseCommand):
                         variety = value
                     elif ("Vintage" in key) or ("vintage" in key):
                         vintage = value
+                    elif ("ABV" in key) or ("abv" in key):
+                        abv = value
+
+                description_soup = BeautifulSoup(' '.join(descrip_results), 'html.parser')
+                description = description_soup.getText()
 
                 w = Wines(name=title, color=color, eyes=eyes, nose=nose, mouth=mouth, overall=overall,
                           producer=producer, price=price, region=region, sub_region=sub_region, variety=variety,
-                          vintage=vintage, description=description, harvest_data=str(article), harvested_from=h,
+                          vintage=vintage, abv=abv, description=description, tags=tags, harvest_data=str(article),
+                          harvested_from=h,
                           harvested_date=datetime.datetime.now(datetime.timezone.utc))
                 w.save()
 

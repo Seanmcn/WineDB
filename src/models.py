@@ -20,10 +20,12 @@ class Wines(models.Model):
     overall = models.TextField()
     producer = models.TextField()
 
+    abv = models.CharField(max_length=100, default='N/A')
     region = models.CharField(max_length=150, default='N/A')
     sub_region = models.CharField(max_length=150, default='N/A')
     variety = models.CharField(max_length=150, default='N/A')
     vintage = models.CharField(max_length=150, default='N/A')
+    tags = models.CharField(max_length=300, default='')
 
     price = models.IntegerField(default=0)
     description = models.TextField()
