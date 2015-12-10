@@ -10,20 +10,37 @@ import datetime
 class Command(BaseCommand):
     help = 'Harvests the wine from JoshLikesWine.com'
 
+    def add_arguments(self, parser):
+
+        parser.add_argument('--update_urls',
+                            action='store_true',
+                            default=False,
+                            help='Truncate and remake the post_urls.txt file')
+
     def handle(self, *args, **options):
         posts = set()
         pages = 37  # Current WP page count on JLW.
 
-        # Get all the JLW WP posts
+        # Create text file of all the JLW post URLs
+        if options['update_urls']:
+            # Truncate the file.
+            open('post_urls.txt', 'w')
+            # Loop through blog pages
+            for x in range(1, pages + 1):
+                print("Getting page "+str(x))
+                page = 'http://www.joshlikeswine.com/page/' + str(x)
+                req = requests.get(page)
+                soup = BeautifulSoup(req.content, 'html.parser')
+                post_titles = soup.findAll('h2', class_='eltdf-post-title')
+                for post_title in post_titles:
+                    # Add URL to file
+                    with open("post_urls.txt", "a") as text_file:
+                        print(format(post_title.find('a')['href']), file=text_file)
+                    posts.add(post_title.find('a')['href'])
 
-        for x in range(1, pages + 1):
-            print("Getting page "+str(x))
-            page = 'http://www.joshlikeswine.com/page/' + str(x)
-            req = requests.get(page)
-            soup = BeautifulSoup(req.content, 'html.parser')
-            post_titles = soup.findAll('h2', class_='eltdf-post-title')
-            for post_title in post_titles:
-                posts.add(post_title.find('a')['href'])
+        # Load post_urls.txt into list
+        for line in open("post_urls.txt", "r"):
+            posts.add(line.strip('\n'))
 
         #####################
         # Process each post #
