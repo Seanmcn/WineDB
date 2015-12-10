@@ -64,7 +64,7 @@ class Command(BaseCommand):
 
             # Figure out if single or multi wine post by searching for tasting note
             tasting_search = re.compile(r"(tasting note|tasting&nbsp;note|Tasting Note)",
-                                        re.M | re.I)
+                                        re.M | re.I)  # Todo Sean: Figure out why re.I isn't matching other cases.
             is_tasting = tasting_search.findall(str(article))
 
             if is_tasting:
