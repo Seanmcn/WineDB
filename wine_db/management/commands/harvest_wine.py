@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-from src.models import History, Wines
+from wine_db.models import History, Wines
 from bs4 import BeautifulSoup
 from django.utils.html import strip_tags
 import requests
@@ -398,7 +398,7 @@ class Command(BaseCommand):
                     print("Multi wine")
                     # Multi wine post
                     multi_wine_regex = re.compile(
-                        r"""<p><(.*?)<\/strong>(.*?)(<br>|<br\/>)(.*?)<\/p>""", ## todo sean: this needs to change
+                        r"""<p><(.*?)<\/strong>(.*?)(<br>|<br\/>)(.*?)<\/p>""", # todo sean: this needs to change
                         re.M | re.S | re.I)
                     wines = multi_wine_regex.findall(str(article))
                     Command.create_multi_wines(wines, url, article, tags)
