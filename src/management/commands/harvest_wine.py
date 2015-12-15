@@ -82,26 +82,50 @@ class Command(BaseCommand):
     def create_multi_wines(wines, url, article, tags):
 
         # Regex
-        region_price_regex = re.compile(r"""\((.*?)\) \$(.+)|\((.*?)\)""", re.M | re.S | re.I)
         title_regex = re.compile(r"""<strong>(.*)""", re.M | re.S | re.I)
-
+        alt_title_regex = re.compile(r"""<span .*>(.*?)</span>""")
         # Create history
         h = History(url=url, wine_count=len(wines), date=datetime.datetime.now(datetime.timezone.utc))
         h.save()
         print("Length of wines:" + str(len(wines)))
-        for wine in wines:
+
+        for wine in wines: # ['title', 'subregion/region price', 'description']
+            print(wine)
             title = title_regex.findall(wine[0])
             if title:
                 title = title[0]
             else:
-                # If there is no title there is no wine so break this loop
-                print("No wine??")
-                h.wine_count -= 1
-                h.save()
-                continue
+                title = alt_title_regex.findall(wine[0])
+                if not title:
+                    # If there is no title there is no wine so break this loop
+                    print("No wine??")
+                    h.wine_count -= 1
+                    h.save()
+                    continue
+
+            title = strip_tags(title)
             color, eyes, nose, mouth, overall, producer = ('N/A',) * 6
             price = 0
             region, sub_region, variety, vintage, description, abv = ('',) * 6
+
+            if 'Riesling' in title:
+                variety = 'Riesling'
+            elif 'Chardonnay' in title:
+                variety = 'Chardonnay'
+            elif 'Sauvignon Blanc' in title:
+                variety = 'Sauvignon Blanc'
+            elif 'Syrah' in title:
+                variety = 'Syrah'
+            elif 'Shiraz' in title:
+                variety = 'Shiraz'
+            elif 'Cabernet Sauvignon' in title:
+                variety = 'Cabernet Sauvignon'
+            elif 'Merlot' in title:
+                variety = 'Merlot'
+            elif 'Pinot Noir' in title:
+                variety = 'Pinot Noir'
+            else:
+                variety = ''
 
             if '#ff99cc' in wine[0]:
                 color = 'Rosé'
@@ -110,37 +134,51 @@ class Command(BaseCommand):
             if '#800000' in wine[0]:
                 color = 'Red'
 
+            region_price_regex = re.compile(r"""\((.*?)\) \$(.+)|\((.*?)\)""", re.M | re.S | re.I)
             region_price = region_price_regex.findall(wine[1])
             total_region = []
             if region_price:
                 region_price = region_price[0]
 
-                if len(region_price[0]):
+                if region_price[0]:
                     total_region = region_price[0]
 
-                if len(region_price[1]):
+                if region_price[1]:
                     price = region_price[1]
 
-                if len(region_price[2]):
+                if region_price[2]:
                     total_region = region_price[2]
+
+                # print('TOTAL REGION')
 
                 if total_region:
                     region_list = total_region.split(',')
-                    if len(region_list) is 1:
+                    # print(len(region_list))
+                    region_count = len(region_list)
+                    if region_count is 1:
                         region = region_list[0].strip()
-                    elif len(region_list) is 2:
+                    elif region_count is 2:
                         region = region_list[1].strip()
                         sub_region = region_list[0].strip()
-                    elif len(region_list) is 3:
-                        region = region_list[2].strip()
-                        sub_region = region_list[0].strip() + ", " + region_list[1].strip()
+                    elif region_count > 2:
+                        # print(region_list)
+                        region_number = region_count - 1
+                        sub_region_number = region_count - 2
+                        alt_sub_region_number = region_count - 3
 
-            description = str(wine[3].strip())
+                        region = region_list[region_number].strip()
+                        # print(region)
+
+                        sub_region = region_list[alt_sub_region_number].strip() + ", " + region_list[sub_region_number].strip()
+                        # print(sub_region)
+                            # print(total_region)
+            # exit()
+            description = str(wine[2].strip())
 
             w = Wines(name=title, color=color, eyes=eyes, nose=nose, mouth=mouth, overall=overall,
                       producer=producer, price=price, region=region, sub_region=sub_region,
                       variety=variety,
-                      vintage=vintage, abv=abv, description=description, tags=str(tags),
+                      vintage=vintage, abv=abv, description=str(description), tags=str(tags),
                       harvest_data=str(article),
                       harvested_from=h,
                       harvested_date=datetime.datetime.now(datetime.timezone.utc))
@@ -174,14 +212,28 @@ class Command(BaseCommand):
                 print("Couldn't determine title!")
                 continue
 
+            if 'Riesling' in title:
+                variety = 'Riesling'
+            elif 'Chardonnay' in title:
+                variety = 'Chardonnay'
+            elif 'Sauvignon Blanc' in title:
+                variety = 'Sauvignon Blanc'
+            elif 'Syrah':
+                variety = 'Syrah'
+            elif 'Shiraz':
+                variety = 'Shiraz'
+            elif 'Cabernet Sauvignon':
+                variety = 'Cabernet Sauvignon'
+            elif 'Merlot':
+                variety = 'Merlot'
+            elif 'Pinot Noir':
+                variety = 'Pinot Noir'
+
             for key, value in info:
                 value_soup = BeautifulSoup(value, 'html.parser')
                 value = value_soup.getText()
                 key_soup = BeautifulSoup(key, 'html.parser')
                 key = key_soup.getText()
-
-                print('key => ' + key + ' value => ' + value)
-
                 if ("Eyes" in key) or ("eyes" in key):
                     eyes = value
                 elif ("Nose" in key) or ("nose" in key):
@@ -245,21 +297,30 @@ class Command(BaseCommand):
         exceptions = set()
         exceptions.add('http://www.joshlikeswine.com/2015/03/25/wset-diploma-unit-3-week-18-workshop-4/')
         exceptions.add('http://www.joshlikeswine.com/2012/12/06/bud-break-2013-winter-courses/')
+        exceptions.add('http://www.joshlikeswine.com/2015/11/18/looking-to-bone-in-beaune/')
 
         no_wine = set()
         no_wine.add('http://www.joshlikeswine.com/2012/12/06/bud-break-2013-winter-courses/')
+        no_wine.add('http://www.joshlikeswine.com/2013/06/15/wset-diploma-section-1-week-10/')
+        no_wine.add('http://www.joshlikeswine.com/2014/10/08/wset-diploma-unit-3-week-1/')
+        no_wine.add('http://www.joshlikeswine.com/2012/05/29/wset-advanced-course/')
+        no_wine.add('http://www.joshlikeswine.com/2015/02/26/vancouver-international-wine-festival-2015-decades-apart/')
+        no_wine.add('http://www.joshlikeswine.com/2013/03/29/wines-to-pair-with-people-that-you-want-to-die/bitterwine/')
 
         multi_wine_list = set()
         multi_wine_list.add('http://www.joshlikeswine.com/2015/09/16/josh-tastes-41-new-york-wines/')
+        multi_wine_list.add('http://www.joshlikeswine.com/2015/09/18/josh-tastes-118-wines-at-top-drop/')
 
         single_wine_list = set()
 
         # # DEBUG##
-        posts = set()
-        # posts.add('http://www.joshlikeswine.com/2014/03/01/2014-viwf-blind-tasting-challenge/')
-        posts.add('http://www.joshlikeswine.com/2015/09/16/josh-tastes-41-new-york-wines/')  # todo: check this
-        # posts.add('http://www.joshlikeswine.com/2015/11/18/looking-to-bone-in-beaune/') # todo: got multi wines but no info check.
-        # posts.add('http://www.joshlikeswine.com/2015/09/18/josh-tastes-118-wines-at-top-drop/') # todo: failing multi wine
+        # posts = set()
+        # posts.add('http://www.joshlikeswine.com/2015/11/18/looking-to-bone-in-beaune/') # todo: might become new standard regex perhaps?
+        # posts.add('http://www.joshlikeswine.com/2015/09/18/josh-tastes-118-wines-at-top-drop/') # todo: working exception multi wine
+        # http://www.joshlikeswine.com/2015/06/10/exams-and-grand-slams/ #check, had length zero in multi wine?
+        # http://www.joshlikeswine.com/2014/07/31/wine-bloggers-conference-2014-blends-2-2-5/ #todo: failing multi wine
+        # http://www.joshlikeswine.com/2015/08/17/josh-is-alone-in-new-york-city-day-1/ #todo : needs special attention
+
         ##END DEBUG##
 
         for url in posts:
@@ -285,6 +346,13 @@ class Command(BaseCommand):
                 elif url == 'http://www.joshlikeswine.com/2015/03/25/wset-diploma-unit-3-week-18-workshop-4/':
                     print('Processing Exception: ' + url)
                     Command.create_multi_wines_exception_a(url, article)
+                elif url == 'http://www.joshlikeswine.com/2015/11/18/looking-to-bone-in-beaune/':
+                    print('Processing Exeption + url')
+                    exception_multi_wine_regex = re.compile(
+                        r"""<p>.*?(?=<span)(.*?)<\/strong>(.*?)(<br>|<br\/>)(.*?)<\/p>""",
+                        re.M | re.S | re.I)
+                    wines = exception_multi_wine_regex.findall(str(article))
+                    Command.create_multi_wines(wines, url, article, tags)
 
             else:
                 print("Processing: " + url)
@@ -330,7 +398,7 @@ class Command(BaseCommand):
                     print("Multi wine")
                     # Multi wine post
                     multi_wine_regex = re.compile(
-                        r"""<p><(.*?)<\/strong>(.*?)(<br>|<br\/>)(.*?)<\/p>""",
+                        r"""<p><(.*?)<\/strong>(.*?)(<br>|<br\/>)(.*?)<\/p>""", ## todo sean: this needs to change
                         re.M | re.S | re.I)
                     wines = multi_wine_regex.findall(str(article))
                     Command.create_multi_wines(wines, url, article, tags)
