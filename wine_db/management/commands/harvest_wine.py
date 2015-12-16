@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-from wine_db.models import History, Wines
+from wine_db.models import History, Wine
 from bs4 import BeautifulSoup
 from django.utils.html import strip_tags
 import requests
@@ -70,7 +70,7 @@ class Command(BaseCommand):
                 elif ("ABV" in key) or ("abv" in key):
                     abv = value
 
-            w = Wines(name=title, color=color, eyes=eyes, nose=nose, mouth=mouth, overall=overall,
+            w = Wine(name=title, color=color, eyes=eyes, nose=nose, mouth=mouth, overall=overall,
                       producer=producer, price=price, region=region, sub_region=sub_region, variety=variety,
                       vintage=vintage, abv=abv, description=description, tags=tags,
                       harvest_data=str(article),
@@ -175,7 +175,7 @@ class Command(BaseCommand):
             # exit()
             description = str(wine[2].strip())
 
-            w = Wines(name=title, color=color, eyes=eyes, nose=nose, mouth=mouth, overall=overall,
+            w = Wine(name=title, color=color, eyes=eyes, nose=nose, mouth=mouth, overall=overall,
                       producer=producer, price=price, region=region, sub_region=sub_region,
                       variety=variety,
                       vintage=vintage, abv=abv, description=str(description), tags=str(tags),
@@ -257,7 +257,7 @@ class Command(BaseCommand):
                 elif ("ABV" in key) or ("abv" in key):
                     abv = value
 
-            w = Wines(name=title, color=color, eyes=eyes, nose=nose, mouth=mouth, overall=overall,
+            w = Wine(name=title, color=color, eyes=eyes, nose=nose, mouth=mouth, overall=overall,
                       producer=producer, price=price, region=region, sub_region=sub_region,
                       variety=variety,
                       vintage=vintage, abv=abv, description=description, tags='',
@@ -306,6 +306,7 @@ class Command(BaseCommand):
         no_wine.add('http://www.joshlikeswine.com/2012/05/29/wset-advanced-course/')
         no_wine.add('http://www.joshlikeswine.com/2015/02/26/vancouver-international-wine-festival-2015-decades-apart/')
         no_wine.add('http://www.joshlikeswine.com/2013/03/29/wines-to-pair-with-people-that-you-want-to-die/bitterwine/')
+        no_wine.add('http://www.joshlikeswine.com/2013/01/05/2013-term-2-week-1-omg-course-outlines/')
 
         multi_wine_list = set()
         multi_wine_list.add('http://www.joshlikeswine.com/2015/09/16/josh-tastes-41-new-york-wines/')

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Wines, History
+from .models import Wine, History
 
 
 class HistoryAdmin(admin.ModelAdmin):
@@ -8,10 +8,10 @@ class HistoryAdmin(admin.ModelAdmin):
     search_fields = ['url']
 
 
-class WinesAdmin(admin.ModelAdmin):
+class WineAdmin(admin.ModelAdmin):
     list_display = ('name', 'color', 'variety', 'region', 'sub_region', 'vintage', 'price')
     list_filter = ['color', 'variety', 'region', 'sub_region',  'vintage']
     search_fields = ['name', 'price', 'vintage', 'region', 'sub_region']
 
-admin.site.register(Wines, WinesAdmin)
+admin.site.register(Wine, WineAdmin)
 admin.site.register(History, HistoryAdmin)

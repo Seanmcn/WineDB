@@ -10,7 +10,7 @@ class History(models.Model):
         return self.url
 
 
-class Wines(models.Model):
+class Wine(models.Model):
     name = models.CharField(max_length=300)
     color = models.CharField(max_length=50, default='N/A')
 
@@ -34,5 +34,11 @@ class Wines(models.Model):
     harvested_from = models.ForeignKey(History)
     harvested_date = models.DateTimeField('date harvested')
 
+    wines = models.Manager()
+
     def __str__(self):
         return self.name
+
+    # @staticmethod
+    def get_all(self):
+        return Wine.wines.all(self)
