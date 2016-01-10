@@ -1,245 +1,47 @@
 <!DOCTYPE html>
-<meta charset="utf-8">
-<style>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static "style.css" %}">
 
-    body {
-        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-        margin: auto;
-        position: relative;
-        width: 960px;
-    }
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+          integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
+          integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 
-    form {
-        position: absolute;
-        right: 10px;
-        top: 10px;
-    }
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
+            integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS"
+            crossorigin="anonymous"></script>
 
-    path {
-        stroke: #fff;
-        fill-rule: evenodd;
-    }
+</head>
 
-    .Set1 .q0-7 {
-        fill: rgb(228, 26, 28)
-    }
-
-    .Set1 .q1-7 {
-        fill: rgb(55, 126, 184)
-    }
-
-    .Set1 .q2-7 {
-        fill: rgb(77, 175, 74)
-    }
-
-    .Set1 .q3-7 {
-        fill: rgb(152, 78, 163)
-    }
-
-    .Set1 .q4-7 {
-        fill: rgb(255, 127, 0)
-    }
-
-    .Set1 .q5-7 {
-        fill: rgb(255, 255, 51)
-    }
-
-    .Set1 .q6-7 {
-        fill: rgb(166, 86, 40)
-    }
-</style>
 <body>
-{% load staticfiles %}
-<script src="http://d3js.org/d3.v3.min.js"></script>
-<script>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <div id="sunburst"></div>
+        </div>
+        <div class="col-md-4">
+            <div class="row">
+                <div class="col-md-12" id="info_title"></div>
+            </div>
+            <div class="row">
+                <div class="col-md-8" id="info_content">
+                    Use the chart to browse through the wines.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-    var width = 960,
-            height = 700,
-            radius = Math.min(width, height) / 2;
-
-    var x = d3.scale.linear()
-            .range([0, 2 * Math.PI]);
-
-    var y = d3.scale.sqrt()
-            .range([0, radius]);
-
-    var color = d3.scale.category20c('#F64740', '#2274A5', '#E83F6F');
-
-    // Mapping of step names to colors.
-    var colors = {
-        "red": "#DD1C1A",
-        "white": "#00A6ED",
-        "rose": "#D90368",
-        "unknown": "#291720"
-    };
-
-    var svg = d3.select("body").append("svg")
-            .attr("width", width)
-            .attr("height", height)
-            .append("g")
-            .attr("transform", "translate(" + width / 2 + "," + (height / 2 + 10) + ")");
-
-    var partition = d3.layout.partition()
-            .sort(null)
-            .value(function (d) {
-                return 1;
-            });
-
-    var arc = d3.svg.arc()
-            .startAngle(function (d) {
-                return Math.max(0, Math.min(2 * Math.PI, x(d.x)));
-            })
-            .endAngle(function (d) {
-                return Math.max(0, Math.min(2 * Math.PI, x(d.x + d.dx)));
-            })
-            .innerRadius(function (d) {
-                return Math.max(0, y(d.y));
-            })
-            .outerRadius(function (d) {
-                return Math.max(0, y(d.y + d.dy));
-            });
-
-    // Keep track of the node that is currently being displayed as the root.
-    var node;
-
-    d3.json("data.json", function (error, root) {
-        node = root;
-        var path = svg.datum(root).selectAll("path")
-                .data(partition.nodes)
-                .enter().append("path")
-                .attr("d", arc)
-                .attr('title', function (d) {
-                    return d.name;
-                })
-                .style("fill", function (d) {
-                    if (colors[d.name]) {
-                        return colors[d.name]
-                    } else {
-                        return color((d.children ? d : d.parent).name)
-                    }
-                })
-                .on("click", click)
-                .on("mouseover", mouseover)
-                .on("mouseleave", mouseleave)
-                .each(stash);
-
-//.append("title").html(function (d) { return d.name; })
-
-        svg.append("svg:text")
-                .attr("x", "0")
-                .attr("y", "0")
-                .attr("fill", "white")
-                .attr("font-size", "16")
-                .attr("text-anchor", "middle")
-                .attr("id", "sunburst_info")
-                .text("Wines");
-
-        d3.selectAll("input").on("change", function change() {
-            var value = this.value === "count"
-                    ? function () {
-                return 1;
-            }
-                    : function (d) {
-                return d.size;
-            };
-
-            path
-                    .data(partition.value(value).nodes)
-                    .transition()
-                    .duration(1000)
-                    .attrTween("d", arcTweenData);
-        });
-
-        function click(d) {
-            node = d;
-            path.transition()
-                    .duration(1000)
-                    .attrTween("d", arcTweenZoom(d));
-        }
-
-        function mouseover(d) {
-            // Fade all the segments.
-            d3.selectAll("path")
-                    .style("opacity", 0.3);
-
-            d3.select("path").style("opacity", 1);
-
-            // Then highlight only those that are an ancestor of the current segment.
-            var sequenceArray = getAncestors(d);
-            d3.selectAll("path")
-                    .filter(function (node) {
-                        return (sequenceArray.indexOf(node) >= 0);
-                    })
-                    .style("opacity", 1);
-
-            document.getElementById("sunburst_info").innerHTML = d.name;
-        }
-
-        function mouseleave(d) {
-            d3.selectAll("path")
-                    .style("opacity", 1);
-            document.getElementById("sunburst_info").innerHTML = "Wines";
-        }
-    });
-
-    d3.select(self.frameElement).style("height", height + "px");
-    // Given a node in a partition layout, return an array of all of its ancestor
-    // nodes, highest first, but excluding the root.
-    function getAncestors(node) {
-        var path = [];
-        var current = node;
-        while (current.parent) {
-            path.unshift(current);
-            current = current.parent;
-        }
-        return path;
-    }
-    // Setup for switching data: stash the old values for transition.
-    function stash(d) {
-        d.x0 = d.x;
-        d.dx0 = d.dx;
-    }
-
-    // When switching data: interpolate the arcs in data space.
-    function arcTweenData(a, i) {
-        var oi = d3.interpolate({x: a.x0, dx: a.dx0}, a);
-
-        function tween(t) {
-            var b = oi(t);
-            a.x0 = b.x;
-            a.dx0 = b.dx;
-            return arc(b);
-        }
-
-        if (i == 0) {
-            // If we are on the first arc, adjust the x domain to match the root node
-            // at the current zoom level. (We only need to do this once.)
-            var xd = d3.interpolate(x.domain(), [node.x, node.x + node.dx]);
-            return function (t) {
-                x.domain(xd(t));
-                return tween(t);
-            };
-        } else {
-            return tween;
-        }
-    }
-
-    // When zooming: interpolate the scales.
-    function arcTweenZoom(d) {
-        var xd = d3.interpolate(x.domain(), [d.x, d.x + d.dx]),
-                yd = d3.interpolate(y.domain(), [d.y, 1]),
-                yr = d3.interpolate(y.range(), [d.y ? 20 : 0, radius]);
-        return function (d, i) {
-            return i
-                    ? function (t) {
-                return arc(d);
-            }
-                    : function (t) {
-                x.domain(xd(t));
-                y.domain(yd(t)).range(yr(t));
-                return arc(d);
-            };
-        };
-    }
-
-</script>
+<script src="{% static "sunburst.js" %}"></script>
+</body>
+</html>

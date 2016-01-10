@@ -1,0 +1,19 @@
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    /*margin: auto;*/
+    /*position: relative;*/
+    /*width: 960px;*/
+}
+
+path {
+    stroke: #fff;
+    fill-rule: evenodd;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+#info_content {
+    text-align: center;
+}
