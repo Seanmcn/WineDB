@@ -26,7 +26,8 @@ var colors = {
     "Red": "#DD1C1A",
     "White": "#00A6ED",
     "Rose": "#D90368",
-    "Unknown": "#291720"
+    "Unknown": "#291720",
+    "N\\A" : "#000000"
 };
 
 var svg = d3.select("#sunburst").append("svg")
@@ -135,17 +136,17 @@ d3.json("data.json", function (error, root) {
 
     //.append("title").html(function (d) { return d.name; })
 
-    //svg.append("svg:text")
-    //    .attr("x", "0")
-    //    .attr("y", "0")
-    //    .attr("fill", "black")
-    //    //.attr("stroke", "black")
-    //    //.attr("stroke-width", "0.5")
-    //    .attr("font-size", "18")
-    //    .attr("font-weight", "bold")
-    //    .attr("font-family", "sans-serif")
-    //    .attr("text-anchor", "middle")
-    //    .attr("id", "sunburst_info");
+    svg.append("svg:text")
+        .attr("x", "0")
+        .attr("y", "0")
+        .attr("fill", "white")
+        .attr("stroke", "black")
+        .attr("stroke-width", "0.5")
+        .attr("font-size", "18")
+        .attr("font-weight", "bold")
+        .attr("font-family", "sans-serif")
+        .attr("text-anchor", "middle")
+        .attr("id", "sunburst_info");
     //.text("Wines");
 
     //d3.selectAll("input").on("change", function change() {
