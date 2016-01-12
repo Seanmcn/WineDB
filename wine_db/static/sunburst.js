@@ -61,11 +61,23 @@ var node;
 d3.json("data.json", function (error, root) {
     node = root;
 
-    var g =  svg.datum(root).selectAll("g")
-        .data(partition.nodes(root))
-        .enter().append("g");
+    //console.log(svg.data(partition.nodes(root)).selectAll(""));
 
-    var path = g.append("path")
+//    var svgContainer = d3.select("body").append("svg")
+//11                                     .attr("width",200)
+//12                                     .attr("height",200);
+
+    //var svgContainer =
+
+
+    var data = svg.datum(root).selectAll("g")
+        .data(partition.nodes(root));
+
+    var group1 = data.enter().append("g").attr("class", "g-inner").filter(function(d) { return d.depth < 2; });
+
+    //var group1Container = group1.append("g").attr("class", "g-one");
+
+    var path = group1.append("path")
         .attr("d", arc)
         .attr('id', function (d) {
             return "sunburst_" + d.name;
@@ -82,29 +94,58 @@ d3.json("data.json", function (error, root) {
         .on("mouseleave", mouseleave)
         .each(stash);
 
-    /* var text = g.append("text")
-     .attr("transform", function(d) { return "rotate(" + computeTextRotation(d) + ")"; })
-     .attr("x", function(d) { return y(d.y); })
-     .attr("dx", "6") // margin
-     .attr("dy", ".35em") // vertical-align
-     .attr("fill", "white")
-     //.attr("stroke", "black")
-     //.attr("stroke-width", "0.5")
-     .text(function(d) { return d.name; });*/
+     var text = group1.append("text")
+        .attr("transform", function(d) { return "rotate(" + computeTextRotation(d) + ")"; })
+        .attr("x", function(d) { return y(d.y); })
+        .attr("dx", "6") // margin
+        .attr("dy", ".35em") // vertical-align
+        .attr("fill", "white")
+        .text(function(d) { return d.name; });
+
+    var group2 = data.enter().append("g").filter(function(d) { return d.depth >= 2; }).attr("class", "g-outer");
+
+    var path2 = group2.append("path")
+        .attr("d", arc)
+        .attr('id', function (d) {
+            return "sunburst_" + d.name;
+        })
+        .style("fill", function (d) {
+            if (colors[d.name]) {
+                return colors[d.name]
+            } else {
+                return color((d.children ? d : d.parent).name)
+            }
+        })
+        .on("click", click)
+        .on("mouseover", mouseover)
+        .on("mouseleave", mouseleave)
+        .each(stash);
+
+
+    console.log(group1);
+    console.log(group2);
+
+     //var text = g1.append("text")
+     //.attr("transform", function(d) { return "rotate(" + computeTextRotation(d) + ")"; })
+     //.attr("x", function(d) { return y(d.y); })
+     //.attr("dx", "6") // margin
+     //.attr("dy", ".35em") // vertical-align
+     //.attr("fill", "white")
+     //.text(function(d) { return d.name; });
 
     //.append("title").html(function (d) { return d.name; })
 
-    svg.append("svg:text")
-        .attr("x", "0")
-        .attr("y", "0")
-        .attr("fill", "black")
-        //.attr("stroke", "black")
-        //.attr("stroke-width", "0.5")
-        .attr("font-size", "18")
-        .attr("font-weight", "bold")
-        .attr("font-family", "sans-serif")
-        .attr("text-anchor", "middle")
-        .attr("id", "sunburst_info");
+    //svg.append("svg:text")
+    //    .attr("x", "0")
+    //    .attr("y", "0")
+    //    .attr("fill", "black")
+    //    //.attr("stroke", "black")
+    //    //.attr("stroke-width", "0.5")
+    //    .attr("font-size", "18")
+    //    .attr("font-weight", "bold")
+    //    .attr("font-family", "sans-serif")
+    //    .attr("text-anchor", "middle")
+    //    .attr("id", "sunburst_info");
     //.text("Wines");
 
     //d3.selectAll("input").on("change", function change() {
@@ -126,6 +167,10 @@ d3.json("data.json", function (error, root) {
     function click(d) {
         node = d;
         path.transition()
+            .duration(1000)
+            .attrTween("d", arcTweenZoom(d));
+
+        path2.transition()
             .duration(1000)
             .attrTween("d", arcTweenZoom(d));
 
@@ -325,5 +370,9 @@ function arcTweenZoom(d) {
 }
 
 function computeTextRotation(d) {
+    console.group("computeTextRotation");
+    console.log("x", x(d.x  + d.dx /2));
+    console.log((x(d.x + d.dx / 2) - Math.PI / 2) / Math.PI * 180);
+    console.groupEnd();
     return (x(d.x + d.dx / 2) - Math.PI / 2) / Math.PI * 180;
 }
