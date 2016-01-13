@@ -10,7 +10,7 @@ if (window.innerHeight < maxHeight) {
 }
 
 var width = maxWidth,
-    height = maxHeight + (maxHeight / 11),
+    height = maxHeight + (maxHeight / 11 + 20),
     radius = Math.min(width, height - 20) / 2;
 
 var x = d3.scale.linear()
@@ -32,9 +32,9 @@ var colors = {
 
 var svg = d3.select("#sunburst").append("svg")
     .attr("width", width)
-    .attr("height", height)
+    .attr("height", height + 20)
     .append("g")
-    .attr("transform", "translate(" + width / 2 + "," + (height / 2 + 10) + ")");
+    .attr("transform", "translate(" + width / 2 + "," + (height / 2 ) + ")");
 
 var partition = d3.layout.partition()
     .sort(null)
@@ -124,7 +124,7 @@ d3.json("data.json", function (error, root) {
 
     svg.append("svg:text")
         .attr("x", "0")
-        .attr("y", -(maxHeight / 2 + 20))
+        .attr("y", (maxHeight / 2) + (maxHeight / 12))
         .attr("fill", "black")
         .attr("stroke", "white")
         .attr("stroke-width", "0.5")
@@ -269,7 +269,7 @@ d3.json("data.json", function (error, root) {
 
     function mouseleave(d) {
         d3.selectAll("path").style("opacity", 1);
-        $('#sunburst_info').empty();
+        //$('#sunburst_info').empty();
     }
 
     /*
