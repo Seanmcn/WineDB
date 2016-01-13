@@ -1,16 +1,16 @@
 // Set width and height breakpoints.
 var maxWidth = 700;
-if(window.innerWidth < maxWidth ){
+if (window.innerWidth < maxWidth) {
     maxWidth = window.innerWidth - (window.innerWidth / 8);
 }
 
 var maxHeight = 550;
-if(window.innerHeight < maxHeight ){
+if (window.innerHeight < maxHeight) {
     maxHeight = window.innerHeight - (window.innerHeight / 8);
 }
 
 var width = maxWidth,
-    height = maxHeight,
+    height = maxHeight + (maxHeight / 11),
     radius = Math.min(width, height - 20) / 2;
 
 var x = d3.scale.linear()
@@ -27,7 +27,7 @@ var colors = {
     "White": "#00A6ED",
     "Rose": "#D90368",
     "Unknown": "#291720",
-    "N\\A" : "#000000"
+    "N\\A": "#000000"
 };
 
 var svg = d3.select("#sunburst").append("svg")
@@ -62,21 +62,13 @@ var node;
 d3.json("data.json", function (error, root) {
     node = root;
 
-    //console.log(svg.data(partition.nodes(root)).selectAll(""));
-
-//    var svgContainer = d3.select("body").append("svg")
-//11                                     .attr("width",200)
-//12                                     .attr("height",200);
-
-    //var svgContainer =
-
-
     var data = svg.datum(root).selectAll("g")
         .data(partition.nodes(root));
 
-    var group1 = data.enter().append("g").attr("class", "g-inner").filter(function(d) { return d.depth < 2; });
+    var group1 = data.enter().append("g").attr("class", "g-inner").filter(function (d) {
+        return d.depth < 2;
+    });
 
-    //var group1Container = group1.append("g").attr("class", "g-one");
 
     var path = group1.append("path")
         .attr("d", arc)
@@ -95,15 +87,23 @@ d3.json("data.json", function (error, root) {
         .on("mouseleave", mouseleave)
         .each(stash);
 
-     var text = group1.append("text")
-        .attr("transform", function(d) { return "rotate(" + computeTextRotation(d) + ")"; })
-        .attr("x", function(d) { return y(d.y); })
+    var text = group1.append("text")
+        .attr("transform", function (d) {
+            return "rotate(" + computeTextRotation(d) + ")";
+        })
+        .attr("x", function (d) {
+            return y(d.y);
+        })
         .attr("dx", "6") // margin
         .attr("dy", ".35em") // vertical-align
         .attr("fill", "white")
-        .text(function(d) { return d.name; });
+        .text(function (d) {
+            return d.name;
+        });
 
-    var group2 = data.enter().append("g").filter(function(d) { return d.depth >= 2; }).attr("class", "g-outer");
+    var group2 = data.enter().append("g").filter(function (d) {
+        return d.depth >= 2;
+    }).attr("class", "g-outer");
 
     var path2 = group2.append("path")
         .attr("d", arc)
@@ -122,32 +122,17 @@ d3.json("data.json", function (error, root) {
         .on("mouseleave", mouseleave)
         .each(stash);
 
-
-    console.log(group1);
-    console.log(group2);
-
-     //var text = g1.append("text")
-     //.attr("transform", function(d) { return "rotate(" + computeTextRotation(d) + ")"; })
-     //.attr("x", function(d) { return y(d.y); })
-     //.attr("dx", "6") // margin
-     //.attr("dy", ".35em") // vertical-align
-     //.attr("fill", "white")
-     //.text(function(d) { return d.name; });
-
-    //.append("title").html(function (d) { return d.name; })
-
     svg.append("svg:text")
         .attr("x", "0")
-        .attr("y", "0")
-        .attr("fill", "white")
-        .attr("stroke", "black")
+        .attr("y", -(maxHeight / 2 + 20))
+        .attr("fill", "black")
+        .attr("stroke", "white")
         .attr("stroke-width", "0.5")
         .attr("font-size", "18")
         .attr("font-weight", "bold")
         .attr("font-family", "sans-serif")
         .attr("text-anchor", "middle")
         .attr("id", "sunburst_info");
-    //.text("Wines");
 
     //d3.selectAll("input").on("change", function change() {
     //    var value = this.value === "count"
@@ -167,79 +152,100 @@ d3.json("data.json", function (error, root) {
 
     function click(d) {
         node = d;
-        path.transition()
-            .duration(1000)
-            .attrTween("d", arcTweenZoom(d));
-
-        path2.transition()
-            .duration(1000)
-            .attrTween("d", arcTweenZoom(d));
-
-        console.log(d);
-
         if (d.depth === 3) {
-            document.getElementById("info_title").innerHTML = ""; // d.parent.parent.name + " - " + d.parent.name;
-            document.getElementById("info_content").innerHTML =
-                "<div class='row'>" +
-                "<div class='col-md-4 bold'>Name</div>" +
-                "<div class='col-md-8'>" + d.name + "</div>" +
-                "</div>" +
-                "<div class='row'>" +
-                "<div class='col-md-4 bold'>Price</div>" +
-                "<div class='col-md-8'>$" + d.price + "</div>" +
-                "</div>" +
-                "<div class='row'>" +
-                "<div class='col-md-4 bold'>ABV</div>" +
-                "<div class='col-md-8'>" + d.abv + "</div>" +
-                "</div>" +
-                "<div class='row'>" +
-                "<div class='col-md-4 bold'>Vintage</div>" +
-                "<div class='col-md-8'>" + d.vintage + "</div>" +
-                "</div>" +
-                "<div class='row'>" +
-                "<div class='col-md-4 bold'>Eyes</div>" +
-                "<div class='col-md-8'>" + d.eyes + "</div>" +
-                "</div>" +
-                "<div class='row'>" +
-                "<div class='col-md-4 bold'>Mouth</div>" +
-                "<div class='col-md-8'>" + d.mouth + "</div>" +
-                "</div>" +
-                "<div class='row'>" +
-                "<div class='col-md-4 bold'>Nose</div>" +
-                "<div class='col-md-8'>" + d.nose + "</div>" +
-                "</div>" +
-                "<div class='row'>" +
-                "<div class='col-md-4 bold'>Overall</div>" +
-                "<div class='col-md-8'>" + d.overall + "</div>" +
-                "</div>" +
-                "<div class='row'>" +
-                "<div class='col-md-4 bold'>Producer</div>" +
-                "<div class='col-md-8'>" + d.producer + "</div>" +
-                "</div>" +
-                "<div class='row'>" +
-                "<div class='col-md-4 bold'>Region</div>" +
-                "<div class='col-md-8'>" + d.region + "</div>" +
-                "</div>" +
-                "<div class='row'>" +
-                "<div class='col-md-4 bold'>Sub Region</div>" +
-                "<div class='col-md-8'>" + d.sub_region + "</div>" +
-                "</div>" +
-                "<div class='row'>" +
-                "<div class='col-md-4 bold'>Description</div>" +
-                "<div class='col-md-8'>" + d.description + "</div>" +
-                "</div>";
+            path.transition()
+                .duration(1000)
+                .attrTween("d", arcTweenZoom(d.parent));
+
+            path2.transition()
+                .duration(1000)
+                .attrTween("d", arcTweenZoom(d.parent));
+        } else {
+            path.transition()
+                .duration(1000)
+                .attrTween("d", arcTweenZoom(d));
+
+            path2.transition()
+                .duration(1000)
+                .attrTween("d", arcTweenZoom(d));
+        }
+        console.group("Item");
+        console.log(d);
+        console.groupEnd();
+
+        $('#singleWine').hide();
+        if (d.depth === 3) {
+
+            $("#singleWine #image .content").html();
+            var imageSearch = 'search_wine.php?search=' + encodeURI(d.name);
+            var image = $.post(imageSearch, function (data) {
+                if (typeof data.images[0] !== "undefined") {
+                    $("#singleWine #image .content")
+                        .html("<img src='" + data.images[0].imageurl + "' alt='" + d.name + "' width='100%' height='400'/>")
+                        .parent().show();
+                }
+            }, "json");
+
+            $('#normalWindow').hide();
+            $('#singleWine #name .content').html(d.name).parent().show();
+            if (d.price) {
+                $('#singleWine #price .content').html('$' + d.price).parent().show();
+            }
+            if (d.abv) {
+                $('#singleWine #abv .content').html(d.abv).parent().show();
+            }
+            if (d.vintage) {
+                $('#singleWine #vintage .content').html(d.vintage).parent().show();
+            }
+            if (d.eyes) {
+                $('#singleWine #eyes .content').html(d.eyes).parent().show();
+            }
+            if (d.mouth) {
+                $('#singleWine #mouth .content').html(d.mouth).parent().show();
+            }
+            if (d.nose) {
+                $('#singleWine #nose .content').html(d.nose).parent().show();
+            }
+            if (d.overall) {
+                $('#singleWine #overall .content').html(d.overall).parent().show();
+            }
+            if (d.producer) {
+                $('#singleWine #producer .content').html(d.producer).parent().show();
+            }
+            if (d.region) {
+                $('#singleWine #region .content').html(d.region).parent().show();
+            }
+            if (d.sub_region) {
+                $('#singleWine #sub-region .content').html(d.sub_region).parent().show();
+            }
+            if (d.description) {
+                $('#singleWine #description .content').html(d.description).parent().show();
+            }
+            $('#singleWine').show();
         }
         else if (d.depth === 2) {
-            document.getElementById("info_title").innerHTML = d.parent.name + " - " + d.name;
-            document.getElementById("info_content").innerHTML = '';
+            $('#singleWine').hide();
+            $('#info_title').html(d.parent.name + " - " + d.name);
+            $('#info_content').html("");
+            $('#normalWindow').show();
+            //document.getElementById("info_title").innerHTML = d.parent.name + " - " + d.name;
+            //document.getElementById("info_content").innerHTML = '';
         }
         else if (d.depth === 1) {
-            document.getElementById("info_title").innerHTML = d.name;
-            document.getElementById("info_content").innerHTML = '';
+            $('#singleWine').hide();
+            $('#info_title').html(d.name);
+            $('#info_content').html("");
+            $('#normalWindow').show();
+            //document.getElementById("info_title").innerHTML = d.name;
+            //document.getElementById("info_content").innerHTML = '';
         }
         else {
-            document.getElementById("info_title").innerHTML = d.name;
-            document.getElementById("info_content").innerHTML = 'Use the chart to browse through the wines.';
+            $('#singleWine').hide();
+            $('#info_title').html(d.name);
+            $('#info_content').html("Use the chart to browse through the wines.");
+            $('#normalWindow').show();
+            //document.getElementById("info_title").innerHTML = d.name;
+            //document.getElementById("info_content").innerHTML = 'Use the chart to browse through the wines.';
         }
     }
 
@@ -258,13 +264,12 @@ d3.json("data.json", function (error, root) {
             })
             .style("opacity", 1);
 
-        document.getElementById("sunburst_info").innerHTML = d.name;
+        $('#sunburst_info').html(d.name);
     }
 
     function mouseleave(d) {
-        d3.selectAll("path")
-            .style("opacity", 1);
-        document.getElementById("sunburst_info").innerHTML = "";
+        d3.selectAll("path").style("opacity", 1);
+        $('#sunburst_info').empty();
     }
 
     /*
@@ -356,7 +361,7 @@ function arcTweenData(a, i) {
 function arcTweenZoom(d) {
     var xd = d3.interpolate(x.domain(), [d.x, d.x + d.dx]),
         yd = d3.interpolate(y.domain(), [d.y, 1]),
-        yr = d3.interpolate(y.range(), [d.y ? 20 : 0, radius]);
+        yr = d3.interpolate(y.range(), [d.y ? (maxHeight / 10) : 0, radius]); //using max height to work out center
     return function (d, i) {
         return i
             ? function (t) {
@@ -371,9 +376,9 @@ function arcTweenZoom(d) {
 }
 
 function computeTextRotation(d) {
-    console.group("computeTextRotation");
-    console.log("x", x(d.x  + d.dx /2));
-    console.log((x(d.x + d.dx / 2) - Math.PI / 2) / Math.PI * 180);
-    console.groupEnd();
+    //console.group("computeTextRotation");
+    //console.log("x", x(d.x + d.dx / 2));
+    //console.log((x(d.x + d.dx / 2) - Math.PI / 2) / Math.PI * 180);
+    //console.groupEnd();
     return (x(d.x + d.dx / 2) - Math.PI / 2) / Math.PI * 180;
 }

@@ -1,8 +1,6 @@
 body {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    /*margin: auto;*/
-    /*position: relative;*/
-    /*width: 960px;*/
+    overflow-x: hidden;
 }
 
 path {
@@ -16,4 +14,13 @@ path {
 
 #info_content {
     text-align: center;
+}
+
+/* Single Wine */
+#singleWine {
+    display: none;
+}
+
+#singleWine .row {
+    display: none;
 }
