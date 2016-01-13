@@ -24,3 +24,11 @@ path {
 #singleWine .row {
     display: none;
 }
+
+.wineImage {
+    height: auto;
+    max-height: 300px;
+    width: auto;
+    margin: 0 auto;
+    display: block;
+}

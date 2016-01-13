@@ -176,12 +176,12 @@ d3.json("data.json", function (error, root) {
         $('#singleWine').hide();
         if (d.depth === 3) {
 
-            $("#singleWine #image .content").html();
+            $("#singleWine #image .content").empty();
             var imageSearch = 'search_wine.php?search=' + encodeURI(d.name);
             var image = $.post(imageSearch, function (data) {
                 if (typeof data.images[0] !== "undefined") {
                     $("#singleWine #image .content")
-                        .html("<img src='" + data.images[0].imageurl + "' alt='" + d.name + "' width='100%' height='400'/>")
+                        .html("<img src='" + data.images[0].imageurl + "' alt='" + d.name + "' class='wineImage'/>")
                         .parent().show();
                 }
             }, "json");
