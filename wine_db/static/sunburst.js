@@ -1,7 +1,7 @@
 // Set width and height breakpoints.
 var maxWidth = 700;
 if (window.innerWidth < maxWidth) {
-    maxWidth = window.innerWidth - (window.innerWidth / 8);
+    maxWidth = window.innerWidth;
 }
 
 var maxHeight = 550;
@@ -87,19 +87,45 @@ d3.json("data.json", function (error, root) {
         .on("mouseleave", mouseleave)
         .each(stash);
 
-    var text = group1.append("text")
-        .attr("transform", function (d) {
-            return "rotate(" + computeTextRotation(d) + ")";
-        })
-        .attr("x", function (d) {
-            return y(d.y);
-        })
-        .attr("dx", "6") // margin
-        .attr("dy", ".35em") // vertical-align
-        .attr("fill", "white")
+    //Create an SVG text element and append a textPath element
+/*    var text = group1.append("text")
+        //.attr("x", function (d) {
+        //    return d.x;
+        //})   //Move the text from the start angle of the
+     //    .attr("transform", function (d) {
+     //return "rotate(" + computeTextRotation(d) + ")";
+     //})
+        .attr("dy", function (d) {
+            return (d.dy*120);
+        }) //Move the text down
+        .append("textPath") //append a textPath to the text element
+        .attr("xlink:href", function (d) {
+            return "#sunburst_" + d.name;
+        }) //place the ID of the path here
+        .style("text-anchor", "middle") //place the text halfway on the arc
+        .attr("fill", "white") //place the text halfway on the arc
+        .attr("startOffset", "20%")
+        //.attr('y', -20)
+
         .text(function (d) {
             return d.name;
-        });
+        });*/
+     var text = group1.append("text")
+     .attr("transform", function (d) {
+     return "rotate(" + computeTextRotation(d) + ")";
+     })
+     .attr("x", function (d) {
+     return y(d.y);
+     })
+     //.attr("y", function (d) {
+     //    return x(d.x);
+     //})
+     .attr("dx", "6") // margin
+     .attr("dy", ".35em") // vertical-align
+     .attr("fill", "white")
+     .text(function (d) {
+     return d.name;
+     });
 
     var group2 = data.enter().append("g").filter(function (d) {
         return d.depth >= 2;
@@ -152,6 +178,11 @@ d3.json("data.json", function (error, root) {
 
     function click(d) {
         node = d;
+
+        console.group("Item");
+        console.log(d);
+        console.groupEnd();
+
         if (d.depth === 3) {
             path.transition()
                 .duration(1000)
@@ -169,9 +200,7 @@ d3.json("data.json", function (error, root) {
                 .duration(1000)
                 .attrTween("d", arcTweenZoom(d));
         }
-        console.group("Item");
-        console.log(d);
-        console.groupEnd();
+
 
         $('#singleWine').hide();
         if (d.depth === 3) {
