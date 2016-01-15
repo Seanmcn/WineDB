@@ -88,44 +88,45 @@ d3.json("data.json", function (error, root) {
         .each(stash);
 
     //Create an SVG text element and append a textPath element
-/*    var text = group1.append("text")
-        //.attr("x", function (d) {
-        //    return d.x;
-        //})   //Move the text from the start angle of the
+    /*    var text = group1.append("text")
+     //.attr("x", function (d) {
+     //    return d.x;
+     //})   //Move the text from the start angle of the
      //    .attr("transform", function (d) {
      //return "rotate(" + computeTextRotation(d) + ")";
      //})
-        .attr("dy", function (d) {
-            return (d.dy*120);
-        }) //Move the text down
-        .append("textPath") //append a textPath to the text element
-        .attr("xlink:href", function (d) {
-            return "#sunburst_" + d.name;
-        }) //place the ID of the path here
-        .style("text-anchor", "middle") //place the text halfway on the arc
-        .attr("fill", "white") //place the text halfway on the arc
-        .attr("startOffset", "20%")
-        //.attr('y', -20)
+     .attr("dy", function (d) {
+     return (d.dy*120);
+     }) //Move the text down
+     .append("textPath") //append a textPath to the text element
+     .attr("xlink:href", function (d) {
+     return "#sunburst_" + d.name;
+     }) //place the ID of the path here
+     .style("text-anchor", "middle") //place the text halfway on the arc
+     .attr("fill", "white") //place the text halfway on the arc
+     .attr("startOffset", "20%")
+     //.attr('y', -20)
 
-        .text(function (d) {
-            return d.name;
-        });*/
-     var text = group1.append("text")
-     .attr("transform", function (d) {
-     return "rotate(" + computeTextRotation(d) + ")";
-     })
-     .attr("x", function (d) {
-     return y(d.y);
-     })
-     //.attr("y", function (d) {
-     //    return x(d.x);
-     //})
-     .attr("dx", "6") // margin
-     .attr("dy", ".35em") // vertical-align
-     .attr("fill", "white")
      .text(function (d) {
      return d.name;
-     });
+     });*/
+    var text = group1.append("text")
+        .attr("transform", function (d) {
+            return "rotate(" + computeTextRotation(d) + ")";
+        })
+        .attr("x", function (d) {
+            return y(d.y);
+        })
+        //.attr("y", function (d) {
+        //    return x(d.x);
+        //})
+        .attr("dx", "6") // margin
+        .attr("dy", ".35em") // vertical-align
+        .attr("fill", "white")
+        .attr("class", "level-text-two")
+        .text(function (d) {
+            return d.name;
+        });
 
     var group2 = data.enter().append("g").filter(function (d) {
         return d.depth >= 2;
@@ -201,8 +202,10 @@ d3.json("data.json", function (error, root) {
                 .attrTween("d", arcTweenZoom(d));
         }
 
-
+        // Hide things
         $('#singleWine').hide();
+        $('.level-text-two').hide();
+
         if (d.depth === 3) {
 
             $("#singleWine #image .content").empty();
@@ -269,6 +272,7 @@ d3.json("data.json", function (error, root) {
             //document.getElementById("info_content").innerHTML = '';
         }
         else {
+            $('.level-text-two').show();
             $('#singleWine').hide();
             $('#info_title').html(d.name);
             $('#info_content').html("Use the chart to browse through the wines.");
