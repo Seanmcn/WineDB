@@ -5,7 +5,15 @@ from django.utils.html import strip_tags
 import requests
 import re
 import datetime
+from django.utils.text import slugify
+from django.utils.encoding import smart_text
+from bs4 import UnicodeDammit
+import os
+import urllib
+import codecs
 
+import urllib.request
+import shutil
 
 class Command(BaseCommand):
     help = 'Harvests the wine from JoshLikesWine.com'
@@ -17,9 +25,13 @@ class Command(BaseCommand):
                             default=False,
                             help='Truncate and remake the post_urls.txt file')
 
+        parser.add_argument('--update_posts',
+                            action='store_true',
+                            default=False,
+                            help='Update the post text files')
+
     @staticmethod
     def create_single_wine(wine, title, url, article, tags):
-
         color, eyes, nose, mouth, overall, producer = ('N/A',) * 6
         price = 0
         region, sub_region, variety, vintage, description, abv = ('',) * 6
@@ -64,18 +76,19 @@ class Command(BaseCommand):
                 elif ("Region" in key) or ("region" in key):
                     region = value
                 elif ("Variety" in key) or ("variety" in key):
-                    variety = value
+                    variety = str(value)
                 elif ("Vintage" in key) or ("vintage" in key):
                     vintage = value
                 elif ("ABV" in key) or ("abv" in key):
                     abv = value
 
+            # Save the wine to the database
             w = Wine(name=title, color=color, eyes=eyes, nose=nose, mouth=mouth, overall=overall,
-                      producer=producer, price=price, region=region, sub_region=sub_region, variety=variety,
-                      vintage=vintage, abv=abv, description=description, tags=tags,
-                      harvest_data=str(article),
-                      harvested_from=h,
-                      harvested_date=datetime.datetime.now(datetime.timezone.utc))
+                     producer=producer, price=price, region=region, sub_region=sub_region, variety=variety,
+                     vintage=vintage, abv=abv, description=description, tags=tags,
+                     harvest_data=str(article),
+                     harvested_from=h,
+                     harvested_date=datetime.datetime.now(datetime.timezone.utc))
             w.save()
 
     @staticmethod
@@ -89,7 +102,7 @@ class Command(BaseCommand):
         h.save()
         print("Length of wines:" + str(len(wines)))
 
-        for wine in wines: # ['title', 'subregion/region price', 'description']
+        for wine in wines:  # ['title', 'subregion/region price', 'description']
             print(wine)
             title = title_regex.findall(wine[0])
             if title:
@@ -169,19 +182,20 @@ class Command(BaseCommand):
                         region = region_list[region_number].strip()
                         # print(region)
 
-                        sub_region = region_list[alt_sub_region_number].strip() + ", " + region_list[sub_region_number].strip()
+                        sub_region = region_list[alt_sub_region_number].strip() + ", " + region_list[
+                            sub_region_number].strip()
                         # print(sub_region)
-                            # print(total_region)
+                        # print(total_region)
             # exit()
             description = str(wine[2].strip())
 
             w = Wine(name=title, color=color, eyes=eyes, nose=nose, mouth=mouth, overall=overall,
-                      producer=producer, price=price, region=region, sub_region=sub_region,
-                      variety=variety,
-                      vintage=vintage, abv=abv, description=str(description), tags=str(tags),
-                      harvest_data=str(article),
-                      harvested_from=h,
-                      harvested_date=datetime.datetime.now(datetime.timezone.utc))
+                     producer=producer, price=price, region=region, sub_region=sub_region,
+                     variety=variety,
+                     vintage=vintage, abv=abv, description=str(description), tags=str(tags),
+                     harvest_data=str(article),
+                     harvested_from=h,
+                     harvested_date=datetime.datetime.now(datetime.timezone.utc))
             w.save()
         return True
 
@@ -258,15 +272,102 @@ class Command(BaseCommand):
                     abv = value
 
             w = Wine(name=title, color=color, eyes=eyes, nose=nose, mouth=mouth, overall=overall,
-                      producer=producer, price=price, region=region, sub_region=sub_region,
-                      variety=variety,
-                      vintage=vintage, abv=abv, description=description, tags='',
-                      harvest_data=str(article),
-                      harvested_from=h,
-                      harvested_date=datetime.datetime.now(datetime.timezone.utc))
+                     producer=producer, price=price, region=region, sub_region=sub_region,
+                     variety=variety,
+                     vintage=vintage, abv=abv, description=description, tags='',
+                     harvest_data=str(article),
+                     harvested_from=h,
+                     harvested_date=datetime.datetime.now(datetime.timezone.utc))
             w.save()
 
     def handle(self, *args, **options):
+                #####################
+        # Process each post #
+        #####################
+        exceptions = set()
+        exceptions.add('http://www.joshlikeswine.com/2015/03/25/wset-diploma-unit-3-week-18-workshop-4/')
+        exceptions.add('http://www.joshlikeswine.com/2012/12/06/bud-break-2013-winter-courses/')
+        exceptions.add('http://www.joshlikeswine.com/2015/11/18/looking-to-bone-in-beaune/')
+
+        no_wine = set()
+        no_wine.add('http://www.joshlikeswine.com/2012/12/06/bud-break-2013-winter-courses/')
+        no_wine.add('http://www.joshlikeswine.com/2013/06/15/wset-diploma-section-1-week-10/')
+        no_wine.add('http://www.joshlikeswine.com/2014/10/08/wset-diploma-unit-3-week-1/')
+        no_wine.add('http://www.joshlikeswine.com/2012/05/29/wset-advanced-course/')
+        no_wine.add('http://www.joshlikeswine.com/2015/02/26/vancouver-international-wine-festival-2015-decades-apart/')
+        no_wine.add(
+                'http://www.joshlikeswine.com/2013/03/29/wines-to-pair-with-people-that-you-want-to-die/bitterwine/')
+        no_wine.add('http://www.joshlikeswine.com/2013/01/05/2013-term-2-week-1-omg-course-outlines/')
+        no_wine.add('http://www.joshlikeswine.com/2013/03/01/2013-term-2-week-8-catching-up/')
+        no_wine.add('http://www.joshlikeswine.com/2014/10/22/wset-diploma-unit-3-week-2-loire-valley/')
+        no_wine.add('http://www.joshlikeswine.com/2013/02/20/2013-term-2-week-7-finally-sort-of/')
+        no_wine.add('http://www.joshlikeswine.com/2014/01/09/wset-diploma-section-2-week-1/')
+        no_wine.add('http://www.joshlikeswine.com/2014/11/19/wset-diploma-unit-3-week-5-alsace/')
+        no_wine.add('http://www.joshlikeswine.com/2014/11/05/wset-diploma-unit-3-week-4-workshop/')
+        no_wine.add('http://www.joshlikeswine.com/2014/12/11/wset-diploma-unit-3-week-7-australia/')
+        no_wine.add('http://www.joshlikeswine.com/2014/10/03/court-of-master-sommeliers-the-certified-sommelier-exam/')
+        no_wine.add(
+                'http://www.joshlikeswine.com/2013/01/19/2013-term-2-week-3-pinot-gris-after-pinot-gris-after-pinot-gris-after-pinot-gris/')
+        no_wine.add(
+                'http://www.joshlikeswine.com/2013/01/11/2013-term-2-week-2-delphinidins-mutations-pressure-and-lychee/')
+        no_wine.add(
+            'http://www.joshlikeswine.com/2013/01/11/2013-term-2-week-2-delphinidins-mutations-pressure-and-lychee/')
+        no_wine.add('http://www.joshlikeswine.com/2014/10/22/wset-diploma-unit-3-week-2-loire-valley/')
+        no_wine.add('http://www.joshlikeswine.com/2014/10/30/wset-diploma-unit-3-week-3-bordeaux/')
+        no_wine.add('http://www.joshlikeswine.com/2015/08/21/josh-is-alone-in-new-york-city-day-2/')
+        no_wine.add('http://www.joshlikeswine.com/2012/12/24/filipino-cuisine-and-wine-adobo/')
+        no_wine.add('http://www.joshlikeswine.com/2013/06/29/wset-diploma-section-1-week-11/')
+        no_wine.add('http://www.joshlikeswine.com/2014/12/11/wset-diploma-unit-3-week-7-australia/')
+        no_wine.add('http://www.joshlikeswine.com/2013/01/25/2013-term-2-week-4-fnh-330-is-a-total-joke/')
+        no_wine.add('http://www.joshlikeswine.com/2014/01/27/wine-tasting-talent-or-training-via-the-ubyssey/')
+        no_wine.add('http://www.joshlikeswine.com/2012/09/29/what-wines-pair-with-a-zombie-apocalypse/')
+        no_wine.add('http://www.joshlikeswine.com/2014/11/05/wset-diploma-unit-3-week-4-workshop/')
+        no_wine.add(
+            'http://www.joshlikeswine.com/2014/07/31/wine-bloggers-conference-2014-first-time-at-a-legit-vineyard/')
+        no_wine.add('http://www.joshlikeswine.com/2013/04/12/wset-diploma-section-1-week-1/')
+        no_wine.add('http://www.joshlikeswine.com/2014/10/03/court-of-master-sommeliers-the-certified-sommelier-exam/')
+        no_wine.add(
+            'http://www.joshlikeswine.com/2013/01/19/2013-term-2-week-3-pinot-gris-after-pinot-gris-after-pinot-gris-after-pinot-gris/')
+        no_wine.add('http://www.joshlikeswine.com/2014/12/03/wset-diploma-unit-3-week-6-rhone/')
+        no_wine.add('http://www.joshlikeswine.com/2012/11/30/goodbye-cognitive-systems-hello-oenology-viticulture/')
+        no_wine.add('http://www.joshlikeswine.com/2014/10/22/wset-diploma-unit-3-week-2-loire-valley/')
+        no_wine.add('http://www.joshlikeswine.com/2013/05/29/wset-diploma-section-1-week-7/')
+        no_wine.add('http://www.joshlikeswine.com/2014/11/19/wset-diploma-unit-3-week-5-alsace/')
+        no_wine.add('http://www.joshlikeswine.com/2013/05/17/wset-diploma-section-1-week-6/')
+        no_wine.add('http://www.joshlikeswine.com/2015/07/29/josh-likes-maryland-part-2-new-york-city/')
+        no_wine.add('http://www.joshlikeswine.com/2013/02/13/2013-term-2-week-6-hitting-a-wall-of-jeng/')
+        no_wine.add('http://www.joshlikeswine.com/2013/02/20/2013-term-2-week-7-finally-sort-of/')
+        # no_wine.add('')
+
+        multi_wine_list = set()
+        multi_wine_list.add('http://www.joshlikeswine.com/2015/09/16/josh-tastes-41-new-york-wines/')
+        multi_wine_list.add('http://www.joshlikeswine.com/2015/09/18/josh-tastes-118-wines-at-top-drop/')
+        multi_wine_list.add('http://www.joshlikeswine.com/2015/05/11/sun-rays-and-vouvrays/')  # works?
+        multi_wine_list.add('http://www.joshlikeswine.com/2015/06/10/exams-and-grand-slams/')  # works?
+
+        single_wine_list = set()
+        single_wine_list.add(
+            'http://www.joshlikeswine.com/2014/04/16/2012-arnoux-tresor-du-clocher-muscat-de-beaumes-de-venise/')
+        single_wine_list.add('http://www.joshlikeswine.com/2014/04/16/nv-seppelt-gr-113-rare-muscat-rutherglen/')
+        single_wine_list.add(
+            'http://www.joshlikeswine.com/2014/01/30/nv-domaine-breton-la-dilettante-vouvray-brut-corked-bottle/')  # works?
+
+        ## HARD ONES
+
+        # http://www.joshlikeswine.com/2014/03/01/2014-viwf-blind-tasting-challenge/
+        # http://www.joshlikeswine.com/2013/01/16/holiday-wines-with-the-co-workers/
+        # http://www.joshlikeswine.com/2015/02/26/vancouver-international-wine-festival-2015-shiraz-aussie-superstar/
+        # http://www.joshlikeswine.com/2015/02/26/vancouver-international-wine-festival-2015-decades-apart/
+        # http://www.joshlikeswine.com/2014/03/01/2014-viwf-blind-tasting-challenge/
+        # http://www.joshlikeswine.com/2015/02/25/pre-vancouver-international-wine-fest-2015/
+        # http://www.joshlikeswine.com/2015/01/11/dad-blinds-me-on-some-wine/
+        # http://www.joshlikeswine.com/2014/03/01/2014-viwf-blind-tasting-challenge/
+        # http://www.joshlikeswine.com/2015/03/25/il-veneto-in-un-bicchiere/
+        # http://www.joshlikeswine.com/2013/03/04/2013-vancouver-international-wine-festival/
+        # http://www.joshlikeswine.com/2014/03/04/2014-vancouver-international-wine-festival-wine-tour-de-france-seminar/
+
+        ## END HARD ONES ##
+
         posts = set()
         pages = 37  # Current WP page count on JLW. // 369 posts currently
 
@@ -291,43 +392,37 @@ class Command(BaseCommand):
         for line in open("post_urls.txt", "r"):
             posts.add(line.strip('\n'))
 
-        #####################
-        # Process each post #
-        #####################
-        exceptions = set()
-        exceptions.add('http://www.joshlikeswine.com/2015/03/25/wset-diploma-unit-3-week-18-workshop-4/')
-        exceptions.add('http://www.joshlikeswine.com/2012/12/06/bud-break-2013-winter-courses/')
-        exceptions.add('http://www.joshlikeswine.com/2015/11/18/looking-to-bone-in-beaune/')
-
-        no_wine = set()
-        no_wine.add('http://www.joshlikeswine.com/2012/12/06/bud-break-2013-winter-courses/')
-        no_wine.add('http://www.joshlikeswine.com/2013/06/15/wset-diploma-section-1-week-10/')
-        no_wine.add('http://www.joshlikeswine.com/2014/10/08/wset-diploma-unit-3-week-1/')
-        no_wine.add('http://www.joshlikeswine.com/2012/05/29/wset-advanced-course/')
-        no_wine.add('http://www.joshlikeswine.com/2015/02/26/vancouver-international-wine-festival-2015-decades-apart/')
-        no_wine.add('http://www.joshlikeswine.com/2013/03/29/wines-to-pair-with-people-that-you-want-to-die/bitterwine/')
-        no_wine.add('http://www.joshlikeswine.com/2013/01/05/2013-term-2-week-1-omg-course-outlines/')
-
-        multi_wine_list = set()
-        multi_wine_list.add('http://www.joshlikeswine.com/2015/09/16/josh-tastes-41-new-york-wines/')
-        multi_wine_list.add('http://www.joshlikeswine.com/2015/09/18/josh-tastes-118-wines-at-top-drop/')
-
-        single_wine_list = set()
-
         # # DEBUG##
         # posts = set()
+        # posts.add('http://www.joshlikeswine.com/2013/04/27/2009-chateau-la-grande-clotte-bordeaux-blanc/')
         # posts.add('http://www.joshlikeswine.com/2015/11/18/looking-to-bone-in-beaune/') # todo: might become new standard regex perhaps?
         # posts.add('http://www.joshlikeswine.com/2015/09/18/josh-tastes-118-wines-at-top-drop/') # todo: working exception multi wine
         # http://www.joshlikeswine.com/2015/06/10/exams-and-grand-slams/ #check, had length zero in multi wine?
         # http://www.joshlikeswine.com/2014/07/31/wine-bloggers-conference-2014-blends-2-2-5/ #todo: failing multi wine
         # http://www.joshlikeswine.com/2015/08/17/josh-is-alone-in-new-york-city-day-1/ #todo : needs special attention
+        # http://www.joshlikeswine.com/2013/01/16/holiday-wines-with-the-co-workers/ #todo: failing multi
+        # http://www.joshlikeswine.com/2013/04/10/joiefarm-wines-2012/ #todo: multi exception
+        # http://www.joshlikeswine.com/2014/12/20/wset-diploma-unit-3-week-9-workshop-2/ #todo: multi failing on titles
 
         ##END DEBUG##
 
         for url in posts:
-            # Request URL and get article
-            req = requests.get(url)
-            soup = BeautifulSoup(req.content, 'html.parser')
+            file_name = "posts/"+slugify(url)+".html"
+
+            # Check if we are updating the post's HTML
+            if options['update_posts']:
+                # Remove file if it exists
+                if os.path.isfile(file_name):
+                    os.remove(file_name)
+                # Copy HTML to file
+                with urllib.request.urlopen(url) as response, open(file_name, 'wb') as out_file:
+                    shutil.copyfileobj(response, out_file)
+
+            # Read the content
+            content = codecs.open(file_name, 'r', 'utf-8').read()
+            # Load BeautifulSoup
+            soup = BeautifulSoup(content, 'html.parser')
+            # Find the article to do the work on
             article = soup.find('article')
 
             # Find the post tags
@@ -338,10 +433,10 @@ class Command(BaseCommand):
                 tags = ''
 
             # Handle exceptions
-            if url in exceptions:
+            if url in exceptions or url in no_wine:
                 if url in no_wine:
                     print('No wine on: ' + url)
-                    h = History(url=url, wine_count=0, date=datetime.datetime.now(datetime.timezone.utc))
+                    h = History(url=url, wine_count=99923, date=datetime.datetime.now(datetime.timezone.utc))
                     h.save()
                     continue
                 elif url == 'http://www.joshlikeswine.com/2015/03/25/wset-diploma-unit-3-week-18-workshop-4/':
@@ -350,8 +445,8 @@ class Command(BaseCommand):
                 elif url == 'http://www.joshlikeswine.com/2015/11/18/looking-to-bone-in-beaune/':
                     print('Processing Exeption + url')
                     exception_multi_wine_regex = re.compile(
-                        r"""<p>.*?(?=<span)(.*?)<\/strong>(.*?)(<br>|<br\/>)(.*?)<\/p>""",
-                        re.M | re.S | re.I)
+                            r"""<p>.*?(?=<span)(.*?)<\/strong>(.*?)(<br>|<br\/>)(.*?)<\/p>""",
+                            re.M | re.S | re.I)
                     wines = exception_multi_wine_regex.findall(str(article))
                     Command.create_multi_wines(wines, url, article, tags)
 
@@ -376,11 +471,15 @@ class Command(BaseCommand):
                     title_regex = re.compile(r""":(.*)""")  # Regex for Witty Title : Wine Name
                     alt_regex = re.compile(r""">(.*)</h2>""", re.M | re.S)  # Regex for title that is just wine.
                     title = title_regex.findall(str(h2_title))  # Try first regex.
+
+                    # print(UnicodeDammit(str(h2_title)).unicode_markup)
+                    # print (str(h2_title))
                     if not title:
                         # If that's failed try alternative regex
                         title = alt_regex.findall(str(h2_title))
+                        # print(title)
                         if not title:
-                            # Last resort, title unknown
+                            # Last reso/rt, title unknown
                             # title = 'Unknown'
                             print("Couldn't determine title 2!")
                             continue
@@ -388,6 +487,7 @@ class Command(BaseCommand):
                             title = title[0]
                     else:
                         title = title[0]
+
                     title = strip_tags(title).strip()  # Strip any leftover
 
                     # Regex out the wine info
@@ -399,7 +499,7 @@ class Command(BaseCommand):
                     print("Multi wine")
                     # Multi wine post
                     multi_wine_regex = re.compile(
-                        r"""<p><(.*?)<\/strong>(.*?)(<br>|<br\/>)(.*?)<\/p>""", # todo sean: this needs to change
-                        re.M | re.S | re.I)
+                            r"""<p><(.*?)<\/strong>(.*?)(<br>|<br\/>)(.*?)<\/p>""",  # todo sean: this needs to change
+                            re.M | re.S | re.I)
                     wines = multi_wine_regex.findall(str(article))
                     Command.create_multi_wines(wines, url, article, tags)

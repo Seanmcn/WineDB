@@ -26,8 +26,7 @@ var colors = {
     "Red": "#DD1C1A",
     "White": "#00A6ED",
     "Rose": "#D90368",
-    "Unknown": "#291720",
-    "N\\A": "#000000"
+    "N\A": "#000000"
 };
 
 var svg = d3.select("#sunburst").append("svg")
@@ -77,8 +76,8 @@ d3.json("data.json", function (error, root) {
             return "sunburst_" + d.name;
         })
         .style("fill", function (d) {
-            if (colors[d.name]) {
-                return colors[d.name]
+            if (d.color) {
+                return d.color
             } else {
                 return color((d.children ? d : d.parent).name)
             }
@@ -89,7 +88,7 @@ d3.json("data.json", function (error, root) {
         .each(stash);
 
     // Playing with better rotation text
-/*
+    /*
      var text = group1.append("text")
      .attr("dy", function (d) {
      return (d.dy*120);
@@ -106,16 +105,29 @@ d3.json("data.json", function (error, root) {
      .text(function (d) {
      return d.name;
      });
-*/
+     */
 
     // Description text on first two levels
     var text = group1.append("text")
         .attr("transform", function (d) {
-            return "rotate(" + computeTextRotation(d) + ")";
+            return "rotate(" + calculateRotation(d) + ")";
         })
+        //.attr("transform", function (d) {
+        //    return "rotate(" + computeTextRotation(d) + ")";
+        //})
         .attr("x", function (d) {
             return y(d.y);
         })
+        //.attr("transform", function (d) {
+        //    return calculateX(d);
+        //})
+        //.attr("x", function (d) {
+        //    return calculateX(d);
+        //})
+        //.attr("y", function (d) {
+        //    return calculateY(d);
+        //})
+
         .attr("dx", "6") // margin
         .attr("dy", ".35em") // vertical-align
         .attr("fill", "white")
@@ -161,23 +173,23 @@ d3.json("data.json", function (error, root) {
         .attr("id", "sunburst_info");
 
     // Changing the JSON data
-/*
-    d3.selectAll("input").on("change", function change() {
-        var value = this.value === "count"
-            ? function () {
-            return 1;
-        }
-            : function (d) {
-            return d.size;
-        };
+    /*
+     d3.selectAll("input").on("change", function change() {
+     var value = this.value === "count"
+     ? function () {
+     return 1;
+     }
+     : function (d) {
+     return d.size;
+     };
 
-        path
-            .data(partition.value(value).nodes)
-            .transition()
-            .duration(1000)
-            .attrTween("d", arcTweenData);
-    });
-*/
+     path
+     .data(partition.value(value).nodes)
+     .transition()
+     .duration(1000)
+     .attrTween("d", arcTweenData);
+     });
+     */
 
     function click(d) {
         node = d;
@@ -366,4 +378,25 @@ function arcTweenZoom(d) {
 
 function computeTextRotation(d) {
     return (x(d.x + d.dx / 2) - Math.PI / 2) / Math.PI * 180;
+}
+
+function calculateRotation(d) {
+    console.group("Calculating Rotation for: " + d.name);
+    console.log(d);
+    console.groupEnd();
+    //if (d.name == "") {
+    //    return d.x;
+    //} else {
+    //    return 0;
+    //}
+    return computeTextRotation(d);
+    //return 0;
+}
+function calculateX(d) {
+    //return x(d.x*Math.PI);
+    return y(d.y);
+}
+function calculateY(d) {
+    return y(d.x);
+    //return 0;
 }

@@ -71,10 +71,10 @@ def json_file(request):
         unknown_by_berry.append({"name": key, "children": value})
 
     colors = []
-    colors.append({"name": "White", "children": white_by_berry})
-    colors.append({"name": "Red", "children": red_by_berry})
-    colors.append({"name": "Rose", "children": rose_by_berry})
-    colors.append({"name": "Unknown", "children": unknown_by_berry})
+    colors.append({"name": "White", "children": white_by_berry, "color": "#00A6ED"})
+    colors.append({"name": "Red", "children": red_by_berry, "color": "#DD1C1A"})
+    colors.append({"name": "Rose", "children": rose_by_berry, "color": "#D90368"})
+    colors.append({"name": "N/A", "children": unknown_by_berry, "color": "#000000"})
 
     data = {}
     data['children'] = colors
