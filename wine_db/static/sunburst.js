@@ -1,10 +1,10 @@
 // Set width and height breakpoints.
-var maxWidth = 700;
+var maxWidth = 500;
 if (window.innerWidth < maxWidth) {
     maxWidth = window.innerWidth;
 }
 
-var maxHeight = 550;
+var maxHeight = 350;
 if (window.innerHeight < maxHeight) {
     maxHeight = window.innerHeight - (window.innerHeight / 8);
 }
@@ -108,33 +108,33 @@ d3.json("data.json", function (error, root) {
      */
 
     // Description text on first two levels
-    var text = group1.append("text")
-        .attr("transform", function (d) {
-            return "rotate(" + calculateRotation(d) + ")";
-        })
-        //.attr("transform", function (d) {
-        //    return "rotate(" + computeTextRotation(d) + ")";
-        //})
-        .attr("x", function (d) {
-            return y(d.y);
-        })
-        //.attr("transform", function (d) {
-        //    return calculateX(d);
-        //})
-        //.attr("x", function (d) {
-        //    return calculateX(d);
-        //})
-        //.attr("y", function (d) {
-        //    return calculateY(d);
-        //})
-
-        .attr("dx", "6") // margin
-        .attr("dy", ".35em") // vertical-align
-        .attr("fill", "white")
-        .attr("class", "level-text-two")
-        .text(function (d) {
-            return d.name;
-        });
+    //var text = group1.append("text")
+    //    .attr("transform", function (d) {
+    //        return "rotate(" + calculateRotation(d) + ")";
+    //    })
+    //    //.attr("transform", function (d) {
+    //    //    return "rotate(" + computeTextRotation(d) + ")";
+    //    //})
+    //    .attr("x", function (d) {
+    //        return y(d.y);
+    //    })
+    //    //.attr("transform", function (d) {
+    //    //    return calculateX(d);
+    //    //})
+    //    //.attr("x", function (d) {
+    //    //    return calculateX(d);
+    //    //})
+    //    //.attr("y", function (d) {
+    //    //    return calculateY(d);
+    //    //})
+    //
+    //    .attr("dx", "6") // margin
+    //    .attr("dy", ".35em") // vertical-align
+    //    .attr("fill", "white")
+    //    .attr("class", "level-text-two")
+    //    .text(function (d) {
+    //        return d.name;
+    //    });
 
     // Group 2 will contain all the rest of the items
     var group2 = data.enter().append("g").filter(function (d) {
@@ -162,10 +162,11 @@ d3.json("data.json", function (error, root) {
     // Setting up the hover text SVG
     svg.append("svg:text")
         .attr("x", "0")
-        .attr("y", (maxHeight / 2) + (maxHeight / 12))
-        .attr("fill", "black")
-        .attr("stroke", "white")
-        .attr("stroke-width", "0.5")
+        //.attr("y", (maxHeight / 2) + (maxHeight / 12))
+        .attr("y", 0)
+        .attr("fill", "white")
+        .attr("stroke", "black")
+        .attr("stroke-width", "0.7")
         .attr("font-size", "18")
         .attr("font-weight", "bold")
         .attr("font-family", "sans-serif")
@@ -271,22 +272,35 @@ d3.json("data.json", function (error, root) {
             $('#singleWine').show();
         }
         else if (d.depth === 2) {
-            $('#singleWine').hide();
-            $('#info_title').html(d.parent.name + " - " + d.name);
-            $('#info_content').html("");
-            $('#normalWindow').show();
+           $('#singleWine').hide();
+            $('#info_title').html();
+            $('#info_content').html("  <ul> " +
+                "<li>Hover over sunburst areas to get section name</li>" +
+                "<li>Click sunburst area to facet to that section</li> " +
+                "<li>Clicking a wine will replace this text with the wine information.</li>" +
+                " <li>At anytime you can click on the center of the sunburst to go up a level.</li>" +
+                "</ul>");
         }
         else if (d.depth === 1) {
             $('#singleWine').hide();
-            $('#info_title').html(d.name);
-            $('#info_content').html("");
-            $('#normalWindow').show();
+            $('#info_title').html();
+            $('#info_content').html("  <ul> " +
+                "<li>Hover over sunburst areas to get section name</li>" +
+                "<li>Click sunburst area to facet to that section</li> " +
+                "<li>Clicking a wine will replace this text with the wine information.</li>" +
+                " <li>At anytime you can click on the center of the sunburst to go up a level.</li>" +
+                "</ul>");
         }
         else {
             $('.level-text-two').show();
             $('#singleWine').hide();
-            $('#info_title').html(d.name);
-            $('#info_content').html("Use the chart to browse through the wines.");
+            $('#info_title').html();
+            $('#info_content').html("  <ul> " +
+                "<li>Hover over sunburst areas to get section name</li>" +
+                "<li>Click sunburst area to facet to that section</li> " +
+                "<li>Clicking a wine will replace this text with the wine information.</li>" +
+                " <li>At anytime you can click on the center of the sunburst to go up a level.</li>" +
+                "</ul>");
             $('#normalWindow').show();
         }
     }

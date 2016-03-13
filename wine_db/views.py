@@ -4,7 +4,7 @@ import json
 
 
 def index(request):
-    return render_to_response('wine_db/index.html')
+    return render_to_response('wine_db/home.html')
 
 
 def json_file(request):
@@ -84,3 +84,23 @@ def json_file(request):
         json.dump(data, text_file, ensure_ascii=True)
 
     return render_to_response('wine_db/data.json')
+
+
+def json_dt(request):
+    wines = Wine.wines.all()
+
+    data = []
+    for wine in wines:
+        wine.variety = wine.variety.strip()
+        if not wine.variety or wine.variety is '':
+            wine.variety = 'N/A'
+            
+        data.append(
+            [wine.name, wine.color, wine.variety, wine.price, wine.abv, wine.region, wine.sub_region,
+             wine.eyes, wine.nose, wine.mouth, wine.overall, wine.producer, wine.vintage, wine.description
+             ])
+
+    with open('templates/wine_db/data-tables.json', 'w') as text_file:
+        json.dump(data, text_file, ensure_ascii=True)
+
+    return render_to_response('wine_db/data-tables.json')

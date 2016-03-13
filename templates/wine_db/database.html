@@ -1,0 +1,127 @@
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.11/css/jquery.dataTables.min.css" media="all">
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/responsive/2.0.2/css/responsive.dataTables.min.css"
+      media="all">
+<script type="text/javascript" src="//cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="//cdn.datatables.net/responsive/2.0.2/js/dataTables.responsive.min.js"></script>
+{% load staticfiles %}
+<script type="text/javascript" src="{% static "bootbox.min.js" %}"></script>
+<a id="popoutTable">Pop-out</a>
+<div id="wineDBContainer">
+    <table id="wineDataTable" class="display responsive no-wrap" cellspacing="0" width="100%"></table>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $.getJSON("data-tables.json", function (json) {
+
+            // DataTable
+            var table = $('#wineDataTable').DataTable({
+                data: json,
+                {#                responsive: true,#}
+                stateSave: true,
+                columns: [
+                    {title: "Name"},
+                    {title: "Color"},
+                    {title: "Variety"},
+                    {title: "Price"},
+                    {title: "ABV"},
+                    {title: "Region"},
+                    {title: "Sub Region"},
+                    {title: "Eyes"},
+                    {title: "Nose"},
+                    {title: "Mouth"},
+                    {title: "Overall"},
+                    {title: "Producer"},
+                    {title: "Vintage"},
+                    {title: "Description"}
+                ],
+                columnDefs: [
+                    {targets: [0, 1, 2, 5], searchable: true},
+                    {targets: '_all', searchable: false}
+                ]
+            });
+
+            // Setup - add a text input to each footer cell
+            var searchable = ['Color', 'Variety'];
+            $('#wineDataTable tfoot th').each(function () {
+                var title = $(this).text();
+                if ($.inArray(title, searchable) !== -1) {
+                    $(this).html('<input type="text"  placeholder="Search ' + title + '" style="width: 100%"/>');
+                }
+            });
+
+
+            // Apply the search
+            table.columns().every(function () {
+                var that = this;
+                $('input', this.footer()).on('keyup change', function () {
+                    if (that.search() !== this.value) {
+                        that.search(this.value).draw();
+                    }
+                });
+            });
+
+        });
+    });
+    $('#popoutTable').on('click', function () {
+        $.getJSON("data-tables.json", function (json) {
+            var box = bootbox.dialog({
+                show: false,
+                message: '<table id="wineDataTablePopout" class="display responsive no-wrap" cellspacing="0" width="100%"></table>',
+                title: "Wine Database",
+                onEscape: true,
+                backdrop: true,
+                size: "large"
+            });
+
+            box.on("shown.bs.modal", function () {
+                //.modal-fs-dialog {
+                //modal-fs-content {
+                $('.modal-dialog').addClass('modal-fs-dialog');
+                $('.modal-content').addClass('modal-fs-content');
+                // DataTable
+                var popupTable = $('#wineDataTablePopout').DataTable({
+                    data: json,
+                    stateSave: true,
+                    columns: [
+                        {title: "Name"},
+                        {title: "Color"},
+                        {title: "Variety"},
+                        {title: "Price"},
+                        {title: "ABV"},
+                        {title: "Region"},
+                        {title: "Sub Region"},
+                        {title: "Eyes"},
+                        {title: "Nose"},
+                        {title: "Mouth"},
+                        {title: "Overall"},
+                        {title: "Producer"},
+                        {title: "Vintage"},
+                        {title: "Description"}
+                    ],
+                    columnDefs: [
+                        {targets: [0, 1, 2, 5], searchable: true},
+                        {targets: '_all', searchable: false}
+                    ]
+                });
+
+                // Setup - add a text input to each footer cell
+                $('#wineDataTablePopout tfoot th').each(function () {
+                    var title = $(this).text();
+                    $(this).html('<input type="text"  placeholder="Search ' + title + '" style="width: 100%"/>');
+                });
+
+                // Apply the search
+                popupTable.columns().every(function () {
+                    var that = this;
+                    $('input', this.footer()).on('keyup change', function () {
+                        if (that.search() !== this.value) {
+                            that.search(this.value).draw();
+                        }
+                    });
+                });
+
+            });
+            box.modal('show');
+        });
+    });
+</script>

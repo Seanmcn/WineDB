@@ -14,6 +14,8 @@ import codecs
 
 import urllib.request
 import shutil
+import html
+
 
 class Command(BaseCommand):
     help = 'Harvests the wine from JoshLikesWine.com'
@@ -44,6 +46,8 @@ class Command(BaseCommand):
         descrip_results = single_wine_descrip.findall(str(article))
         description_soup = BeautifulSoup(' '.join(descrip_results), 'html.parser')
         description = description_soup.getText()
+
+        title = html.unescape(title)
 
         # Try figure out the colour
         if ('white' in tags) or ('White' in tags):
@@ -82,6 +86,26 @@ class Command(BaseCommand):
                 elif ("ABV" in key) or ("abv" in key):
                     abv = value
 
+            if not variety:
+                if 'Riesling' in title:
+                    variety = 'Riesling'
+                elif 'Chardonnay' in title:
+                    variety = 'Chardonnay'
+                elif 'Sauvignon Blanc' in title:
+                    variety = 'Sauvignon Blanc'
+                elif 'Syrah' in title:
+                    variety = 'Syrah'
+                elif 'Shiraz' in title:
+                    variety = 'Shiraz'
+                elif 'Cabernet Sauvignon' in title:
+                    variety = 'Cabernet Sauvignon'
+                elif 'Merlot' in title:
+                    variety = 'Merlot'
+                elif 'Pinot Noir' in title:
+                    variety = 'Pinot Noir'
+                else:
+                    variety = 'N/A'
+
             # Save the wine to the database
             w = Wine(name=title, color=color, eyes=eyes, nose=nose, mouth=mouth, overall=overall,
                      producer=producer, price=price, region=region, sub_region=sub_region, variety=variety,
@@ -116,7 +140,8 @@ class Command(BaseCommand):
                     h.save()
                     continue
 
-            title = strip_tags(title)
+            title = html.unescape(strip_tags(title))
+
             color, eyes, nose, mouth, overall, producer = ('N/A',) * 6
             price = 0
             region, sub_region, variety, vintage, description, abv = ('',) * 6
@@ -162,8 +187,6 @@ class Command(BaseCommand):
                 if region_price[2]:
                     total_region = region_price[2]
 
-                # print('TOTAL REGION')
-
                 if total_region:
                     region_list = total_region.split(',')
                     # print(len(region_list))
@@ -180,13 +203,10 @@ class Command(BaseCommand):
                         alt_sub_region_number = region_count - 3
 
                         region = region_list[region_number].strip()
-                        # print(region)
 
                         sub_region = region_list[alt_sub_region_number].strip() + ", " + region_list[
                             sub_region_number].strip()
-                        # print(sub_region)
-                        # print(total_region)
-            # exit()
+
             description = str(wine[2].strip())
 
             w = Wine(name=title, color=color, eyes=eyes, nose=nose, mouth=mouth, overall=overall,
@@ -281,13 +301,14 @@ class Command(BaseCommand):
             w.save()
 
     def handle(self, *args, **options):
-                #####################
+        #####################
         # Process each post #
         #####################
         exceptions = set()
         exceptions.add('http://www.joshlikeswine.com/2015/03/25/wset-diploma-unit-3-week-18-workshop-4/')
         exceptions.add('http://www.joshlikeswine.com/2012/12/06/bud-break-2013-winter-courses/')
         exceptions.add('http://www.joshlikeswine.com/2015/11/18/looking-to-bone-in-beaune/')
+        exceptions.add('http://www.joshlikeswine.com/2014/07/31/wine-bloggers-conference-2014-blends-2-2-5/')
 
         no_wine = set()
         no_wine.add('http://www.joshlikeswine.com/2012/12/06/bud-break-2013-winter-courses/')
@@ -311,7 +332,7 @@ class Command(BaseCommand):
         no_wine.add(
                 'http://www.joshlikeswine.com/2013/01/11/2013-term-2-week-2-delphinidins-mutations-pressure-and-lychee/')
         no_wine.add(
-            'http://www.joshlikeswine.com/2013/01/11/2013-term-2-week-2-delphinidins-mutations-pressure-and-lychee/')
+                'http://www.joshlikeswine.com/2013/01/11/2013-term-2-week-2-delphinidins-mutations-pressure-and-lychee/')
         no_wine.add('http://www.joshlikeswine.com/2014/10/22/wset-diploma-unit-3-week-2-loire-valley/')
         no_wine.add('http://www.joshlikeswine.com/2014/10/30/wset-diploma-unit-3-week-3-bordeaux/')
         no_wine.add('http://www.joshlikeswine.com/2015/08/21/josh-is-alone-in-new-york-city-day-2/')
@@ -323,11 +344,11 @@ class Command(BaseCommand):
         no_wine.add('http://www.joshlikeswine.com/2012/09/29/what-wines-pair-with-a-zombie-apocalypse/')
         no_wine.add('http://www.joshlikeswine.com/2014/11/05/wset-diploma-unit-3-week-4-workshop/')
         no_wine.add(
-            'http://www.joshlikeswine.com/2014/07/31/wine-bloggers-conference-2014-first-time-at-a-legit-vineyard/')
+                'http://www.joshlikeswine.com/2014/07/31/wine-bloggers-conference-2014-first-time-at-a-legit-vineyard/')
         no_wine.add('http://www.joshlikeswine.com/2013/04/12/wset-diploma-section-1-week-1/')
         no_wine.add('http://www.joshlikeswine.com/2014/10/03/court-of-master-sommeliers-the-certified-sommelier-exam/')
         no_wine.add(
-            'http://www.joshlikeswine.com/2013/01/19/2013-term-2-week-3-pinot-gris-after-pinot-gris-after-pinot-gris-after-pinot-gris/')
+                'http://www.joshlikeswine.com/2013/01/19/2013-term-2-week-3-pinot-gris-after-pinot-gris-after-pinot-gris-after-pinot-gris/')
         no_wine.add('http://www.joshlikeswine.com/2014/12/03/wset-diploma-unit-3-week-6-rhone/')
         no_wine.add('http://www.joshlikeswine.com/2012/11/30/goodbye-cognitive-systems-hello-oenology-viticulture/')
         no_wine.add('http://www.joshlikeswine.com/2014/10/22/wset-diploma-unit-3-week-2-loire-valley/')
@@ -347,10 +368,10 @@ class Command(BaseCommand):
 
         single_wine_list = set()
         single_wine_list.add(
-            'http://www.joshlikeswine.com/2014/04/16/2012-arnoux-tresor-du-clocher-muscat-de-beaumes-de-venise/')
+                'http://www.joshlikeswine.com/2014/04/16/2012-arnoux-tresor-du-clocher-muscat-de-beaumes-de-venise/')
         single_wine_list.add('http://www.joshlikeswine.com/2014/04/16/nv-seppelt-gr-113-rare-muscat-rutherglen/')
         single_wine_list.add(
-            'http://www.joshlikeswine.com/2014/01/30/nv-domaine-breton-la-dilettante-vouvray-brut-corked-bottle/')  # works?
+                'http://www.joshlikeswine.com/2014/01/30/nv-domaine-breton-la-dilettante-vouvray-brut-corked-bottle/')  # works?
 
         ## HARD ONES
 
@@ -369,7 +390,7 @@ class Command(BaseCommand):
         ## END HARD ONES ##
 
         posts = set()
-        pages = 37  # Current WP page count on JLW. // 369 posts currently
+        pages = 38  # Current WP page count on JLW. // 369 posts currently
 
         # Create text file of all the JLW post URLs
         if options['update_urls']:
@@ -398,16 +419,15 @@ class Command(BaseCommand):
         # posts.add('http://www.joshlikeswine.com/2015/11/18/looking-to-bone-in-beaune/') # todo: might become new standard regex perhaps?
         # posts.add('http://www.joshlikeswine.com/2015/09/18/josh-tastes-118-wines-at-top-drop/') # todo: working exception multi wine
         # http://www.joshlikeswine.com/2015/06/10/exams-and-grand-slams/ #check, had length zero in multi wine?
-        # http://www.joshlikeswine.com/2014/07/31/wine-bloggers-conference-2014-blends-2-2-5/ #todo: failing multi wine
         # http://www.joshlikeswine.com/2015/08/17/josh-is-alone-in-new-york-city-day-1/ #todo : needs special attention
         # http://www.joshlikeswine.com/2013/01/16/holiday-wines-with-the-co-workers/ #todo: failing multi
         # http://www.joshlikeswine.com/2013/04/10/joiefarm-wines-2012/ #todo: multi exception
         # http://www.joshlikeswine.com/2014/12/20/wset-diploma-unit-3-week-9-workshop-2/ #todo: multi failing on titles
-
+        # posts.add('')
         ##END DEBUG##
 
         for url in posts:
-            file_name = "posts/"+slugify(url)+".html"
+            file_name = "posts/" + slugify(url) + ".html"
 
             # Check if we are updating the post's HTML
             if options['update_posts']:
@@ -447,6 +467,12 @@ class Command(BaseCommand):
                     exception_multi_wine_regex = re.compile(
                             r"""<p>.*?(?=<span)(.*?)<\/strong>(.*?)(<br>|<br\/>)(.*?)<\/p>""",
                             re.M | re.S | re.I)
+                    wines = exception_multi_wine_regex.findall(str(article))
+                    Command.create_multi_wines(wines, url, article, tags)
+                elif url == 'http://www.joshlikeswine.com/2014/07/31/wine-bloggers-conference-2014-blends-2-2-5/':
+                    print('Processing Exeption + url')
+                    exception_multi_wine_regex = re.compile(
+                        r"""<p>(<strong>.*?</strong>)</p>().*?</a></p>.*?<p.*?>(.*?)</p>""", re.M | re.S | re.I)
                     wines = exception_multi_wine_regex.findall(str(article))
                     Command.create_multi_wines(wines, url, article, tags)
 

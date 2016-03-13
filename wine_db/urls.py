@@ -5,5 +5,6 @@ from . import views
 
 urlpatterns = [
                   url(r'^$', views.index, name='index'),
-                  url(r'data.json', views.json_file, name='json')
+                  url(r'data.json', views.json_file, name='json'),
+                  url(r'data-tables.json', views.json_dt, name='json_dt')
               ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
