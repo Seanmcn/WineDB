@@ -1,5 +1,6 @@
 from django.shortcuts import render_to_response
 from .models import Wine
+from .models import History
 import json
 
 
@@ -32,7 +33,7 @@ def json_file(request):
                 {"name": wine.name, "eyes": wine.eyes, "nose": wine.nose, "mouth": wine.mouth, "overall": wine.overall,
                  "producer": wine.producer, "abv": wine.abv, "region": wine.region, "sub_region": wine.sub_region,
                  "variety": wine.variety, "vintage": wine.vintage, "price": wine.price, "description": wine.description,
-                 "count": 1})
+                 "harvested_from": str(wine.harvested_from), "count": 1})
         if "White" in wine.color:
             if wine.variety not in white_berry_dict:
                 white_berry_dict[wine.variety] = []
@@ -40,7 +41,7 @@ def json_file(request):
                 {"name": wine.name, "eyes": wine.eyes, "nose": wine.nose, "mouth": wine.mouth, "overall": wine.overall,
                  "producer": wine.producer, "abv": wine.abv, "region": wine.region, "sub_region": wine.sub_region,
                  "variety": wine.variety, "vintage": wine.vintage, "price": wine.price, "description": wine.description,
-                 "count": 1})
+                 "harvested_from": str(wine.harvested_from), "count": 1})
         if "Rosé" in wine.color:
             if wine.variety not in rose_berry_dict:
                 rose_berry_dict[wine.variety] = []
@@ -48,7 +49,7 @@ def json_file(request):
                 {"name": wine.name, "eyes": wine.eyes, "nose": wine.nose, "mouth": wine.mouth, "overall": wine.overall,
                  "producer": wine.producer, "abv": wine.abv, "region": wine.region, "sub_region": wine.sub_region,
                  "variety": wine.variety, "vintage": wine.vintage, "price": wine.price, "description": wine.description,
-                 "count": 1})
+                 "harvested_from": str(wine.harvested_from), "count": 1})
         if "N/A" in wine.color:
             if wine.variety not in unknown_berry_dict:
                 unknown_berry_dict[wine.variety] = []
@@ -56,7 +57,7 @@ def json_file(request):
                 {"name": wine.name, "eyes": wine.eyes, "nose": wine.nose, "mouth": wine.mouth, "overall": wine.overall,
                  "producer": wine.producer, "abv": wine.abv, "region": wine.region, "sub_region": wine.sub_region,
                  "variety": wine.variety, "vintage": wine.vintage, "price": wine.price, "description": wine.description,
-                 "count": 1})
+                 "harvested_from": str(wine.harvested_from), "count": 1})
 
     for key, value in red_berry_dict.items():
         red_by_berry.append({"name": key, "children": value})
@@ -94,13 +95,65 @@ def json_dt(request):
         wine.variety = wine.variety.strip()
         if not wine.variety or wine.variety is '':
             wine.variety = 'N/A'
-            
-        data.append(
-            [wine.name, wine.color, wine.variety, wine.price, wine.abv, wine.region, wine.sub_region,
-             wine.eyes, wine.nose, wine.mouth, wine.overall, wine.producer, wine.vintage, wine.description
-             ])
 
-    with open('templates/wine_db/data-tables.json', 'w') as text_file:
-        json.dump(data, text_file, ensure_ascii=True)
+        if wine.abv is '':
+            wine.abv = 'N/A'
+
+        if wine.vintage is '':
+            wine.vintage = 'N/A'
+
+        if wine.price is '0' or wine.price is 0 or not wine.price:
+            wine.price = 'N/A'
+
+        if wine.region is '':
+            wine.region = 'N/A'
+
+        if wine.sub_region is '':
+            wine.sub_region = 'N/A'
+
+        if wine.eyes is '':
+            wine.eyes = 'N/A'
+
+        if wine.nose is '':
+            wine.nose = 'N/A'
+
+        if wine.mouth is '':
+            wine.mouth = 'N/A'
+
+        if wine.producer is '':
+            wine.producer = 'N/A'
+
+        wine.description = str(wine.description).strip()
+        if wine.description is '' or not wine.description:
+            wine.description = 'N/A'
+
+        wine_dict = dict()
+        wine_dict['name'] = str(wine.name).strip()
+        wine_dict['color'] = str(wine.color).strip()
+        wine_dict['price'] = str(wine.price).strip()
+        wine_dict['abv'] = str(wine.abv).strip()
+        wine_dict['region'] = str(wine.region).strip()
+        wine_dict['sub_region'] = str(wine.sub_region).strip()
+        wine_dict['eyes'] = str(wine.eyes).strip()
+        wine_dict['nose'] = str(wine.nose).strip()
+        wine_dict['mouth'] = str(wine.mouth).strip()
+        wine_dict['overall'] = str(wine.overall).strip()
+        wine_dict['producer'] = str(wine.producer).strip()
+        wine_dict['vintage'] = str(wine.vintage).strip()
+        wine_dict['producer'] = str(wine.producer).strip()
+        wine_dict['variety'] = str(wine.variety).strip()
+        wine_dict['description'] = str(wine.description)
+
+        wine_dict['link'] = "<a href='" + str(wine.harvested_from) + "' target='_blank'>" + str(wine.harvested_from) + "</a>"
+
+        data.append(wine_dict)
+        # break
+
+    formatted_data = {'data': data}
+
+    # print(formatted_data)
+    # exit()
+    with open('templates/wine_db/data-tables.json', 'w', encoding='utf8') as text_file:
+        json.dump(formatted_data, text_file, ensure_ascii=False)
 
     return render_to_response('wine_db/data-tables.json')

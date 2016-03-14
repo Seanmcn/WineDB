@@ -3,9 +3,10 @@
       media="all">
 <script type="text/javascript" src="//cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="//cdn.datatables.net/responsive/2.0.2/js/dataTables.responsive.min.js"></script>
+<script src="//cdn.jsdelivr.net/jquery.scrollto/2.1.2/jquery.scrollTo.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 {% load staticfiles %}
 <script type="text/javascript" src="{% static "bootbox.min.js" %}"></script>
-<a id="popoutTable">Pop-out</a>
 <div id="wineDBContainer">
     <table id="wineDataTable" class="display responsive no-wrap" cellspacing="0" width="100%"></table>
 </div>
@@ -15,24 +16,25 @@
 
             // DataTable
             var table = $('#wineDataTable').DataTable({
-                data: json,
-                {#                responsive: true,#}
-                stateSave: true,
+                data: json.data,
+                stateSave: false,
                 columns: [
-                    {title: "Name"},
-                    {title: "Color"},
-                    {title: "Variety"},
-                    {title: "Price"},
-                    {title: "ABV"},
-                    {title: "Region"},
-                    {title: "Sub Region"},
-                    {title: "Eyes"},
-                    {title: "Nose"},
-                    {title: "Mouth"},
-                    {title: "Overall"},
-                    {title: "Producer"},
-                    {title: "Vintage"},
-                    {title: "Description"}
+                    {data: "name", title: "Name"},
+                    {data: "color", title: "Color"},
+                    {data: "variety", title: "Variety"},
+                    {data: "price", title: "Price"},
+                    {data: "abv", title: "ABV"},
+                    {data: "region", title: "Region"},
+                    {data: "sub_region", title: "Sub Region"},
+                    {data: "eyes", title: "Eyes"},
+                    {data: "nose", title: "Nose"},
+                    {data: "mouth", title: "Mouth"},
+                    {data: "overall", title: "Overall"},
+                    {data: "producer", title: "Producer"},
+                    {data: "vintage", title: "Vintage"},
+                    {data: "description", title: "Description"},
+                    {data: "link", title: "Post URL"}
+
                 ],
                 columnDefs: [
                     {targets: [0, 1, 2, 5], searchable: true},
@@ -40,29 +42,32 @@
                 ]
             });
 
-            // Setup - add a text input to each footer cell
-            var searchable = ['Color', 'Variety'];
-            $('#wineDataTable tfoot th').each(function () {
-                var title = $(this).text();
-                if ($.inArray(title, searchable) !== -1) {
-                    $(this).html('<input type="text"  placeholder="Search ' + title + '" style="width: 100%"/>');
-                }
-            });
-
-
-            // Apply the search
-            table.columns().every(function () {
-                var that = this;
-                $('input', this.footer()).on('keyup change', function () {
-                    if (that.search() !== this.value) {
-                        that.search(this.value).draw();
-                    }
-                });
-            });
-
         });
     });
-    $('#popoutTable').on('click', function () {
+    $('#sunburstViewInDB').on('click', function() {
+        var name = $('#sunburstViewInDB').data('name');
+        $('#wineDataTable_filter input').val(name);
+        $('#wineDataTable_filter input').keyup();
+        $(window).scrollTo('#popoutTable');
+    });
+    function format(d) {
+        // `d` is the original data object for the row
+        return '<table cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">' +
+                '<tr>' +
+                '<td>Overall:</td>' +
+                '<td>' + d.overall + '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td>Description:</td>' +
+                '<td>' + d.description + '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td>URL:</td>' +
+                '<td>' + d.link + '</td>' +
+                '</tr>' +
+                '</table>';
+    }
+    $('.wineDbPopAction').on('click', function () {
         $.getJSON("data-tables.json", function (json) {
             var box = bootbox.dialog({
                 show: false,
@@ -80,44 +85,46 @@
                 $('.modal-content').addClass('modal-fs-content');
                 // DataTable
                 var popupTable = $('#wineDataTablePopout').DataTable({
-                    data: json,
+                    data: json.data,
                     stateSave: true,
                     columns: [
-                        {title: "Name"},
-                        {title: "Color"},
-                        {title: "Variety"},
-                        {title: "Price"},
-                        {title: "ABV"},
-                        {title: "Region"},
-                        {title: "Sub Region"},
-                        {title: "Eyes"},
-                        {title: "Nose"},
-                        {title: "Mouth"},
-                        {title: "Overall"},
-                        {title: "Producer"},
-                        {title: "Vintage"},
-                        {title: "Description"}
+                        {
+                            "className": 'details-control',
+                            "orderable": false,
+                            "data": null,
+                            "defaultContent": ''
+                        },
+                        {data: "name", title: "Name"},
+                        {data: "color", title: "Color"},
+                        {data: "variety", title: "Variety"},
+                        {data: "price", title: "Price"},
+                        {data: "abv", title: "ABV"},
+                        {data: "region", title: "Region"},
+                        {data: "sub_region", title: "Sub Region"},
+                        {data: "eyes", title: "Eyes"},
+                        {data: "nose", title: "Nose"},
+                        {data: "mouth", title: "Mouth"},
+                        {data: "producer", title: "Producer"},
+                        {data: "vintage", title: "Vintage"}
                     ],
-                    columnDefs: [
-                        {targets: [0, 1, 2, 5], searchable: true},
-                        {targets: '_all', searchable: false}
-                    ]
+                    scrollY: '70vh',
+                    "scrollCollapse": true
                 });
 
-                // Setup - add a text input to each footer cell
-                $('#wineDataTablePopout tfoot th').each(function () {
-                    var title = $(this).text();
-                    $(this).html('<input type="text"  placeholder="Search ' + title + '" style="width: 100%"/>');
-                });
+                $('#wineDataTablePopout tbody').on('click', 'td.details-control', function () {
+                    var tr = $(this).closest('tr');
+                    var row = popupTable.row(tr);
 
-                // Apply the search
-                popupTable.columns().every(function () {
-                    var that = this;
-                    $('input', this.footer()).on('keyup change', function () {
-                        if (that.search() !== this.value) {
-                            that.search(this.value).draw();
-                        }
-                    });
+                    if (row.child.isShown()) {
+                        // This row is already open - close it
+                        row.child.hide();
+                        tr.removeClass('shown');
+                    }
+                    else {
+                        // Open this row
+                        row.child(format(row.data())).show();
+                        tr.addClass('shown');
+                    }
                 });
 
             });

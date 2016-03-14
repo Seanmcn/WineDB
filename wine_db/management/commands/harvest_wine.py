@@ -358,6 +358,7 @@ class Command(BaseCommand):
         no_wine.add('http://www.joshlikeswine.com/2015/07/29/josh-likes-maryland-part-2-new-york-city/')
         no_wine.add('http://www.joshlikeswine.com/2013/02/13/2013-term-2-week-6-hitting-a-wall-of-jeng/')
         no_wine.add('http://www.joshlikeswine.com/2013/02/20/2013-term-2-week-7-finally-sort-of/')
+        no_wine.add('http://www.joshlikeswine.com/2013/03/29/wines-to-pair-with-people-that-you-want-to-die/')
         # no_wine.add('')
 
         multi_wine_list = set()

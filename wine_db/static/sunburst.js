@@ -224,55 +224,35 @@ d3.json("data.json", function (error, root) {
 
         if (d.depth === 3) {
 
-            $("#singleWine #image .content").empty();
-            var imageSearch = 'search_wine.php?search=' + encodeURI(d.name);
-            var image = $.post(imageSearch, function (data) {
-                if (typeof data.images[0] !== "undefined") {
-                    $("#singleWine #image .content")
-                        .html("<img src='" + data.images[0].imageurl + "' alt='" + d.name + "' class='wineImage'/>")
-                        .parent().show();
-                }
-            }, "json");
-
             $('#normalWindow').hide();
             $('#singleWine #name .content').html(d.name).parent().show();
             if (d.price) {
                 $('#singleWine #price .content').html('$' + d.price).parent().show();
             }
-            if (d.abv) {
-                $('#singleWine #abv .content').html(d.abv).parent().show();
-            }
-            if (d.vintage) {
+            if (d.vintage && d.vintage !== 'N/A') {
                 $('#singleWine #vintage .content').html(d.vintage).parent().show();
             }
-            if (d.eyes) {
+            if (d.eyes && d.eyes !== 'N/A') {
                 $('#singleWine #eyes .content').html(d.eyes).parent().show();
             }
-            if (d.mouth) {
+            if (d.mouth && d.mouth !== 'N/A') {
                 $('#singleWine #mouth .content').html(d.mouth).parent().show();
             }
-            if (d.nose) {
+            if (d.nose && d.nose !== 'N/A') {
                 $('#singleWine #nose .content').html(d.nose).parent().show();
             }
-            if (d.overall) {
+            if (d.overall && d.overall !== 'N/A') {
                 $('#singleWine #overall .content').html(d.overall).parent().show();
             }
-            if (d.producer) {
-                $('#singleWine #producer .content').html(d.producer).parent().show();
+            if (d.harvested_from) {
+                $('#singleWine #link .content').html("<a class='breakLink' href='" + d.harvested_from + "' target='_blank'><i class='fa fa-link'></i></a>").parent().show();
             }
-            if (d.region) {
-                $('#singleWine #region .content').html(d.region).parent().show();
-            }
-            if (d.sub_region) {
-                $('#singleWine #sub-region .content').html(d.sub_region).parent().show();
-            }
-            if (d.description) {
-                $('#singleWine #description .content').html(d.description).parent().show();
-            }
+            $('#sunburstViewInDB').data('name', d.name);
+            $('#singleWine #db_link').show();
             $('#singleWine').show();
         }
         else if (d.depth === 2) {
-           $('#singleWine').hide();
+            $('#singleWine').hide();
             $('#info_title').html();
             $('#info_content').html("  <ul> " +
                 "<li>Hover over sunburst areas to get section name</li>" +

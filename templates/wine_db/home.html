@@ -4,8 +4,9 @@
 <h4>A breakdown by wine color &amp; variety</h4>
 {% include "wine_db/sunburst.html" %}
 
-<h2>Database</h2>
+<h2>Database<a id="popoutTable" class="wineDbPopAction"><i class="fa fa-external-link"></i> Pop-out</a></h2>
 <h4>Search &amp; filter wine data to your needs</h4>
+<div class="alert alert-info" role="alert"><strong>Note: </strong>I recommended that you use <a class="wineDbPopAction">pop-out mode</a> to browse/search the database.</div>
 {% include "wine_db/database.html" %}
 
 {% include "wine_db/includes/footer.html" %}

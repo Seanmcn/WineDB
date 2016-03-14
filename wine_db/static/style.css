@@ -46,6 +46,30 @@ path {
 
 .modal-fs-content {
     height: 100% !important;
-    overflow-y: scroll !important;
+    /*overflow-y: scroll !important;*/
     border-radius: 0 !important;
+}
+
+td.details-control {
+    background: url('images/details_open.png') no-repeat center center;
+    cursor: pointer;
+}
+
+tr.shown td.details-control {
+    background: url('images/details_close.png') no-repeat center center;
+}
+
+#popoutTable {
+    color: #1e73be;
+    font-size: 14px;
+    margin-left: 0.5em;
+    vertical-align: top;
+}
+
+#popoutTable i {
+    vertical-align: top;
+}
+
+.breakLink {
+    word-break: break-all;
 }
