@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand, CommandError
 from wine_db.models import History, Wine
 from bs4 import BeautifulSoup
@@ -470,8 +471,8 @@ class Command(BaseCommand):
             posts.add(line.strip('\n'))
 
         # # DEBUG##
-        posts = set()
-        posts.add('http://www.joshlikeswine.com/2014/01/31/nv-pares-balta-cava-brut/')
+        # posts = set()
+        # posts.add('http://www.joshlikeswine.com/2014/01/31/nv-pares-balta-cava-brut/')
         # posts.add('http://www.joshlikeswine.com/2013/04/27/2009-chateau-la-grande-clotte-bordeaux-blanc/')
         # posts.add('http://www.joshlikeswine.com/2015/11/18/looking-to-bone-in-beaune/') # todo: might become new standard regex perhaps?
         # posts.add('http://www.joshlikeswine.com/2015/09/18/josh-tastes-118-wines-at-top-drop/') # todo: working exception multi wine

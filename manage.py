@@ -11,7 +11,7 @@ except ImportError:
 # [End Patch]
 
 if __name__ == "__main__":
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jlw.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wineDB.settings")
 
     from django.core.management import execute_from_command_line
 
