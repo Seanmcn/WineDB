@@ -33,13 +33,10 @@ class Command(BaseCommand):
                             help='Update the post text files')
 
     @staticmethod
-    def create_single_wine(wine, title, url, article, tags):
+    def create_single_wine(unparsed_wine, title, url, article, tags):
         color, eyes, nose, mouth, overall, producer = ('N/A',) * 6
         price = 0
         region, sub_region, variety, vintage, description, abv = ('',) * 6
-
-        h = History(url=url, wine_count=1, date=datetime.datetime.now(datetime.timezone.utc))
-        h.save()
 
         # Description
         single_wine_descrip = re.compile(r"""<p><strong>|<p.*?>(.*?)<\/p>""", re.M | re.S)
@@ -56,8 +53,8 @@ class Command(BaseCommand):
             color = 'Red'
 
         # Process single-wine results
-        if wine:
-            for key, value in wine:
+        if unparsed_wine:
+            for key, value in unparsed_wine:
                 value_soup = BeautifulSoup(value, 'html.parser')
                 value = value_soup.getText()
                 key_soup = BeautifulSoup(key, 'html.parser')
@@ -106,6 +103,26 @@ class Command(BaseCommand):
                 else:
                     variety = 'N/A'
 
+            # Search for previous history
+            previous_history = History.objects.filter(url=url)
+            if previous_history:
+                h = History.objects.get(url=url)
+                h.date = datetime.datetime.now(datetime.timezone.utc)
+                h.save()
+                previous_wine = Wine.wines.filter(name=title, color=color, harvested_from=h)
+                if previous_wine:
+                    p_wine = Wine.wines.get(name=title, color=color, harvested_from=h)
+                    if p_wine.was_modified or p_wine.deleted:
+                        print("Wine has been modified or deleted, not updating!")
+                        return False
+                    else:
+                        print("Removing wine")
+                        p_wine.harvest_delete()
+            else:
+                # Create History
+                h = History(url=url, wine_count=1, date=datetime.datetime.now(datetime.timezone.utc))
+                h.save()
+
             # Save the wine to the database
             w = Wine(name=title, color=color, eyes=eyes, nose=nose, mouth=mouth, overall=overall,
                      producer=producer, price=price, region=region, sub_region=sub_region, variety=variety,
@@ -113,21 +130,28 @@ class Command(BaseCommand):
                      harvest_data=str(article),
                      harvested_from=h,
                      harvested_date=datetime.datetime.now(datetime.timezone.utc))
-            w.save()
+            w.harvest_save()
+        return True
 
     @staticmethod
     def create_multi_wines(wines, url, article, tags):
-
         # Regex
         title_regex = re.compile(r"""<strong>(.*)""", re.M | re.S | re.I)
         alt_title_regex = re.compile(r"""<span .*>(.*?)</span>""")
         # Create history
-        h = History(url=url, wine_count=len(wines), date=datetime.datetime.now(datetime.timezone.utc))
-        h.save()
+        previous_history = History.objects.filter(url=url, wine_count=len(wines))
+        if previous_history:
+            h = History.objects.get(url=url, wine_count=len(wines))
+            h.date = datetime.datetime.now(datetime.timezone.utc)
+            h.save()
+        else:
+            h = History(url=url, wine_count=len(wines), date=datetime.datetime.now(datetime.timezone.utc))
+            h.save()
+
         print("Length of wines:" + str(len(wines)))
 
         for wine in wines:  # ['title', 'subregion/region price', 'description']
-            print(wine)
+
             title = title_regex.findall(wine[0])
             if title:
                 title = title[0]
@@ -209,6 +233,18 @@ class Command(BaseCommand):
 
             description = str(wine[2].strip())
 
+            # Search for previous history
+            if previous_history:
+                previous_wine = Wine.wines.filter(name=title, color=color, harvested_from=h)
+                if previous_wine:
+                    p_wine = Wine.wines.get(name=title, color=color, harvested_from=h)
+                    if p_wine.was_modified or p_wine.deleted:
+                        print("Wine has been modified or deleted, not updating!")
+                        return False
+                    else:
+                        print("Removing wine and updating")
+                        p_wine.harvest_delete()
+
             w = Wine(name=title, color=color, eyes=eyes, nose=nose, mouth=mouth, overall=overall,
                      producer=producer, price=price, region=region, sub_region=sub_region,
                      variety=variety,
@@ -216,7 +252,7 @@ class Command(BaseCommand):
                      harvest_data=str(article),
                      harvested_from=h,
                      harvested_date=datetime.datetime.now(datetime.timezone.utc))
-            w.save()
+            w.harvest_save()
         return True
 
     @staticmethod
@@ -228,8 +264,15 @@ class Command(BaseCommand):
         title_regex = re.compile(r"""<strong>(.*?) –""")
         wine_info_regex = re.compile(r"""<strong>(.*?)<\/strong>(.*?)(?=<)""", re.I | re.M | re.S)
 
-        h = History(url=url, wine_count=len(wines), date=datetime.datetime.now(datetime.timezone.utc))
-        h.save()
+        # Create history
+        previous_history = History.objects.filter(url=url, wine_count=len(wines))
+        if previous_history:
+            h = History.objects.get(url=url, wine_count=len(wines))
+            h.date = datetime.datetime.now(datetime.timezone.utc)
+            h.save()
+        else:
+            h = History(url=url, wine_count=len(wines), date=datetime.datetime.now(datetime.timezone.utc))
+            h.save()
 
         for wine in wines:
             info = wine_info_regex.findall(wine)
@@ -291,6 +334,18 @@ class Command(BaseCommand):
                 elif ("ABV" in key) or ("abv" in key):
                     abv = value
 
+                # Search for previous history
+            if previous_history:
+                previous_wine = Wine.wines.filter(name=title, color=color, harvested_from=h)
+                if previous_wine:
+                    p_wine = Wine.wines.get(name=title, color=color, harvested_from=h)
+                    if p_wine.was_modified or p_wine.deleted:
+                        print("Wine has been modified or deleted, not updating!")
+                        return False
+                    else:
+                        print("Removing wine and updating")
+                        p_wine.harvest_delete()
+
             w = Wine(name=title, color=color, eyes=eyes, nose=nose, mouth=mouth, overall=overall,
                      producer=producer, price=price, region=region, sub_region=sub_region,
                      variety=variety,
@@ -298,7 +353,7 @@ class Command(BaseCommand):
                      harvest_data=str(article),
                      harvested_from=h,
                      harvested_date=datetime.datetime.now(datetime.timezone.utc))
-            w.save()
+            w.harvest_save()
 
     def handle(self, *args, **options):
         #####################
@@ -317,7 +372,7 @@ class Command(BaseCommand):
         no_wine.add('http://www.joshlikeswine.com/2012/05/29/wset-advanced-course/')
         no_wine.add('http://www.joshlikeswine.com/2015/02/26/vancouver-international-wine-festival-2015-decades-apart/')
         no_wine.add(
-                'http://www.joshlikeswine.com/2013/03/29/wines-to-pair-with-people-that-you-want-to-die/bitterwine/')
+            'http://www.joshlikeswine.com/2013/03/29/wines-to-pair-with-people-that-you-want-to-die/bitterwine/')
         no_wine.add('http://www.joshlikeswine.com/2013/01/05/2013-term-2-week-1-omg-course-outlines/')
         no_wine.add('http://www.joshlikeswine.com/2013/03/01/2013-term-2-week-8-catching-up/')
         no_wine.add('http://www.joshlikeswine.com/2014/10/22/wset-diploma-unit-3-week-2-loire-valley/')
@@ -328,11 +383,11 @@ class Command(BaseCommand):
         no_wine.add('http://www.joshlikeswine.com/2014/12/11/wset-diploma-unit-3-week-7-australia/')
         no_wine.add('http://www.joshlikeswine.com/2014/10/03/court-of-master-sommeliers-the-certified-sommelier-exam/')
         no_wine.add(
-                'http://www.joshlikeswine.com/2013/01/19/2013-term-2-week-3-pinot-gris-after-pinot-gris-after-pinot-gris-after-pinot-gris/')
+            'http://www.joshlikeswine.com/2013/01/19/2013-term-2-week-3-pinot-gris-after-pinot-gris-after-pinot-gris-after-pinot-gris/')
         no_wine.add(
-                'http://www.joshlikeswine.com/2013/01/11/2013-term-2-week-2-delphinidins-mutations-pressure-and-lychee/')
+            'http://www.joshlikeswine.com/2013/01/11/2013-term-2-week-2-delphinidins-mutations-pressure-and-lychee/')
         no_wine.add(
-                'http://www.joshlikeswine.com/2013/01/11/2013-term-2-week-2-delphinidins-mutations-pressure-and-lychee/')
+            'http://www.joshlikeswine.com/2013/01/11/2013-term-2-week-2-delphinidins-mutations-pressure-and-lychee/')
         no_wine.add('http://www.joshlikeswine.com/2014/10/22/wset-diploma-unit-3-week-2-loire-valley/')
         no_wine.add('http://www.joshlikeswine.com/2014/10/30/wset-diploma-unit-3-week-3-bordeaux/')
         no_wine.add('http://www.joshlikeswine.com/2015/08/21/josh-is-alone-in-new-york-city-day-2/')
@@ -344,11 +399,11 @@ class Command(BaseCommand):
         no_wine.add('http://www.joshlikeswine.com/2012/09/29/what-wines-pair-with-a-zombie-apocalypse/')
         no_wine.add('http://www.joshlikeswine.com/2014/11/05/wset-diploma-unit-3-week-4-workshop/')
         no_wine.add(
-                'http://www.joshlikeswine.com/2014/07/31/wine-bloggers-conference-2014-first-time-at-a-legit-vineyard/')
+            'http://www.joshlikeswine.com/2014/07/31/wine-bloggers-conference-2014-first-time-at-a-legit-vineyard/')
         no_wine.add('http://www.joshlikeswine.com/2013/04/12/wset-diploma-section-1-week-1/')
         no_wine.add('http://www.joshlikeswine.com/2014/10/03/court-of-master-sommeliers-the-certified-sommelier-exam/')
         no_wine.add(
-                'http://www.joshlikeswine.com/2013/01/19/2013-term-2-week-3-pinot-gris-after-pinot-gris-after-pinot-gris-after-pinot-gris/')
+            'http://www.joshlikeswine.com/2013/01/19/2013-term-2-week-3-pinot-gris-after-pinot-gris-after-pinot-gris-after-pinot-gris/')
         no_wine.add('http://www.joshlikeswine.com/2014/12/03/wset-diploma-unit-3-week-6-rhone/')
         no_wine.add('http://www.joshlikeswine.com/2012/11/30/goodbye-cognitive-systems-hello-oenology-viticulture/')
         no_wine.add('http://www.joshlikeswine.com/2014/10/22/wset-diploma-unit-3-week-2-loire-valley/')
@@ -369,10 +424,10 @@ class Command(BaseCommand):
 
         single_wine_list = set()
         single_wine_list.add(
-                'http://www.joshlikeswine.com/2014/04/16/2012-arnoux-tresor-du-clocher-muscat-de-beaumes-de-venise/')
+            'http://www.joshlikeswine.com/2014/04/16/2012-arnoux-tresor-du-clocher-muscat-de-beaumes-de-venise/')
         single_wine_list.add('http://www.joshlikeswine.com/2014/04/16/nv-seppelt-gr-113-rare-muscat-rutherglen/')
         single_wine_list.add(
-                'http://www.joshlikeswine.com/2014/01/30/nv-domaine-breton-la-dilettante-vouvray-brut-corked-bottle/')  # works?
+            'http://www.joshlikeswine.com/2014/01/30/nv-domaine-breton-la-dilettante-vouvray-brut-corked-bottle/')  # works?
 
         ## HARD ONES
 
@@ -391,7 +446,7 @@ class Command(BaseCommand):
         ## END HARD ONES ##
 
         posts = set()
-        pages = 38  # Current WP page count on JLW. // 369 posts currently
+        pages = 39  # Current WP page count on JLW. // 369 posts currently
 
         # Create text file of all the JLW post URLs
         if options['update_urls']:
@@ -415,7 +470,8 @@ class Command(BaseCommand):
             posts.add(line.strip('\n'))
 
         # # DEBUG##
-        # posts = set()
+        posts = set()
+        posts.add('http://www.joshlikeswine.com/2014/01/31/nv-pares-balta-cava-brut/')
         # posts.add('http://www.joshlikeswine.com/2013/04/27/2009-chateau-la-grande-clotte-bordeaux-blanc/')
         # posts.add('http://www.joshlikeswine.com/2015/11/18/looking-to-bone-in-beaune/') # todo: might become new standard regex perhaps?
         # posts.add('http://www.joshlikeswine.com/2015/09/18/josh-tastes-118-wines-at-top-drop/') # todo: working exception multi wine
@@ -464,14 +520,14 @@ class Command(BaseCommand):
                     print('Processing Exception: ' + url)
                     Command.create_multi_wines_exception_a(url, article)
                 elif url == 'http://www.joshlikeswine.com/2015/11/18/looking-to-bone-in-beaune/':
-                    print('Processing Exeption + url')
+                    print('Processing Exception + url')
                     exception_multi_wine_regex = re.compile(
-                            r"""<p>.*?(?=<span)(.*?)<\/strong>(.*?)(<br>|<br\/>)(.*?)<\/p>""",
-                            re.M | re.S | re.I)
+                        r"""<p>.*?(?=<span)(.*?)<\/strong>(.*?)(<br>|<br\/>)(.*?)<\/p>""",
+                        re.M | re.S | re.I)
                     wines = exception_multi_wine_regex.findall(str(article))
                     Command.create_multi_wines(wines, url, article, tags)
                 elif url == 'http://www.joshlikeswine.com/2014/07/31/wine-bloggers-conference-2014-blends-2-2-5/':
-                    print('Processing Exeption + url')
+                    print('Processing Exception + url')
                     exception_multi_wine_regex = re.compile(
                         r"""<p>(<strong>.*?</strong>)</p>().*?</a></p>.*?<p.*?>(.*?)</p>""", re.M | re.S | re.I)
                     wines = exception_multi_wine_regex.findall(str(article))
@@ -526,7 +582,7 @@ class Command(BaseCommand):
                     print("Multi wine")
                     # Multi wine post
                     multi_wine_regex = re.compile(
-                            r"""<p><(.*?)<\/strong>(.*?)(<br>|<br\/>)(.*?)<\/p>""",  # todo sean: this needs to change
-                            re.M | re.S | re.I)
+                        r"""<p><(.*?)<\/strong>(.*?)(<br>|<br\/>)(.*?)<\/p>""",  # todo sean: this needs to change
+                        re.M | re.S | re.I)
                     wines = multi_wine_regex.findall(str(article))
                     Command.create_multi_wines(wines, url, article, tags)

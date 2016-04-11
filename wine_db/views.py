@@ -10,7 +10,7 @@ def index(request):
 
 def json_file(request):
     if request.GET and request.GET['refresh'] == 'true':
-        wines = Wine.wines.all()
+        wines = Wine.objects.all()
 
         red_by_berry = []
         white_by_berry = []
@@ -90,7 +90,7 @@ def json_file(request):
 
 def json_dt(request):
     if request.GET and request.GET['refresh'] == 'true':
-        wines = Wine.wines.all()
+        wines = Wine.objects.all()
 
         data = []
         for wine in wines:
