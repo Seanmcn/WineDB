@@ -2,3 +2,6 @@
 jlw/__pycache__
 wine_db/__pycache__
 wine_db/migrations
+wineDB/settings.py
+post_urls.txt
+deploy_notes.txt
