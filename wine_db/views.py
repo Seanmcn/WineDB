@@ -4,11 +4,6 @@ from .models import Wine
 from .models import History
 import json
 
-
-def index(request):
-    return render_to_response('wine_db/home.html')
-
-
 def json_file(request):
     if request.GET and request.GET['refresh'] == 'true':
         wines = Wine.objects.all()
