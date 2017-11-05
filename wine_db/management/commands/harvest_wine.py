@@ -39,7 +39,7 @@ class Command(BaseCommand):
         price = 0
         region, sub_region, variety, vintage, description, abv = ('',) * 6
 
-        # Description
+        # Wine Description
         single_wine_descrip = re.compile(r"""<p><strong>|<p.*?>(.*?)<\/p>""", re.M | re.S)
         descrip_results = single_wine_descrip.findall(str(article))
         description_soup = BeautifulSoup(' '.join(descrip_results), 'html.parser')
@@ -47,10 +47,10 @@ class Command(BaseCommand):
 
         title = html.unescape(title)
 
-        # Try figure out the colour
-        if ('white' in tags) or ('White' in tags):
+        # Wine color
+        if 'white' in (tag.lower() for tag in tags):
             color = 'White'
-        if ('red' in tags) or ('Red' in tags):
+        if 'red' in (tag.lower() for tag in tags):
             color = 'Red'
 
         # Process single-wine results
@@ -59,50 +59,40 @@ class Command(BaseCommand):
                 value_soup = BeautifulSoup(value, 'html.parser')
                 value = value_soup.getText()
                 key_soup = BeautifulSoup(key, 'html.parser')
-                key = key_soup.getText()
+                key = key_soup.getText().lower()
 
-                if ("Eyes" in key) or ("eyes" in key):
+                # Todo: Switch to dictionary to shorten this?
+                if "eyes" in key:
                     eyes = value
-                elif ("Nose" in key) or ("nose" in key):
+                elif "nose" in key:
                     nose = value
-                elif ("Mouth" in key) or ("mouth" in key):
+                elif "mouth" in key:
                     mouth = value
-                elif ("All in all" in key) or ("all in all" in key):
+                elif "all in all" in key:
                     overall = value
-                elif ("Producer" in key) or ("producer" in key):
+                elif "producer" in key:
                     producer = value
-                elif ("Price" in key) or ("price" in key):
+                elif "price" in key:
                     price = value.replace("$", "")
-                elif ("Sub-Region" in key) or ("sub-region" in key):
+                elif "sub-region" in key:
                     sub_region = value
-                elif ("Region" in key) or ("region" in key):
+                elif "region" in key:
                     region = value
-                elif ("Variety" in key) or ("variety" in key):
+                elif "variety" in key:
                     variety = str(value)
-                elif ("Vintage" in key) or ("vintage" in key):
+                elif "vintage" in key:
                     vintage = value
-                elif ("ABV" in key) or ("abv" in key):
+                elif "abv" in key:
                     abv = value
 
+            variety_types = ['reisling', 'chardonnay', 'sauvignon blanc', 'syrah', 'shiraz', 'cabernet sauvignon',
+                             'merlot', 'pinot noir']
             if not variety:
-                if 'Riesling' in title:
-                    variety = 'Riesling'
-                elif 'Chardonnay' in title:
-                    variety = 'Chardonnay'
-                elif 'Sauvignon Blanc' in title:
-                    variety = 'Sauvignon Blanc'
-                elif 'Syrah' in title:
-                    variety = 'Syrah'
-                elif 'Shiraz' in title:
-                    variety = 'Shiraz'
-                elif 'Cabernet Sauvignon' in title:
-                    variety = 'Cabernet Sauvignon'
-                elif 'Merlot' in title:
-                    variety = 'Merlot'
-                elif 'Pinot Noir' in title:
-                    variety = 'Pinot Noir'
-                else:
-                    variety = 'N/A'
+                variety = 'N/A'
+                for variety_type in variety_types:
+                    if variety_type in title:
+                        variety = variety_type.capitalize()
+
 
             # Search for previous history
             previous_history = History.objects.filter(url=url)
